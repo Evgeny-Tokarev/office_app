@@ -5,7 +5,7 @@ import {useServerInsertedHTML} from 'next/navigation'
 import createCache, {type Options} from '@emotion/cache';
 import {CacheProvider} from '@emotion/react';
 import {
-    ThemeProvider as MuiThemeProvider, type Theme
+    ThemeProvider as MuiThemeProvider
 } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import {lightTheme, darkTheme} from "@/app/themes/themes";
