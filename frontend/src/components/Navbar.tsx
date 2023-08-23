@@ -1,8 +1,7 @@
 "use client"
 
 import Link from "next/link";
-import Icon from '@mui/material/Icon';
-import Switch from '@mui/material/Switch';
+import {Icon, Switch, Typography, useTheme as useMTheme} from '@mui/material';
 import React from "react";
 import { useTheme } from 'next-themes'
 
@@ -10,6 +9,7 @@ const label = {inputProps: {'aria-label': 'Switch demo'}};
 
 export default function Navbar() {
     const { theme, setTheme } = useTheme()
+    const mTheme = useMTheme()
     const [mounted, setMounted] = React.useState(false)
 
     React.useEffect(() => {
@@ -27,6 +27,12 @@ export default function Navbar() {
             href={"/"}>
             Dashboard
         </Link>
+        <Typography>
+            {mTheme.palette.mode}
+        </Typography>
+        <Typography >
+            {theme}
+        </Typography>
         <div
                 className="flex justify-between items-center">
             <Icon sx={{ color: theme === 'light' ? 'black' : 'white' }}>light_mode</Icon>

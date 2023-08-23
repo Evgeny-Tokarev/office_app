@@ -5,9 +5,7 @@ export const lightTheme = createTheme({
         MuiTypography: {
             styleOverrides: {
                 root: {
-                    fontFamily: 'Lato',
-                    color: 'blue',
-                    backgroundColor: 'pink'
+                    color: 'black',
                 }
             }
         }
@@ -20,9 +18,7 @@ export const darkTheme = createTheme({
         MuiTypography: {
             styleOverrides: {
                 root: {
-                    fontFamily: 'Lato',
-                    color: 'green',
-                    backgroundColor: 'yellow'
+                    color: 'white',
                 }
             }
         }

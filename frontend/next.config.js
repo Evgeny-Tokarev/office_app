@@ -1,10 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    reactStrictMode: false,
+    transpilePackages: ["@mui/material"],
     experimental: {
         appDir: true,
     },
     compiler: {
-        styledComponents: true,
+        styledComponents: {
+            displayName: false,
+            ssr: true
+        },
     },
 }
 
