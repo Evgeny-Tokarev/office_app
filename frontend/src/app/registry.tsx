@@ -76,7 +76,6 @@ function MTP({
 
     useEffect(() => {
         setMTheme(theme === 'light' || theme === '' ? lightTheme : darkTheme)
-        console.log(theme)
     }, [theme]);
     return (<MuiThemeProvider
         theme={mTheme}>

@@ -1,14 +1,9 @@
-"use client";
-
 import AddIcon from '@mui/icons-material/Add';
 import {Fab, Typography} from "@mui/material";
-import {useTheme} from "@mui/material";
-import {useTheme as useNTheme} from "next-themes";
-import React, {useEffect} from "react";
+import {Paper} from "@mui/material";
 
 export default function Dashboard() {
-    return (<main
-        className="p-4 flex-1 flex flex-col justify-between items-center bg-white dark:bg-black">
+    return (<Paper elevation={3} sx={{flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between'}}>
         <Typography
             variant="h1">
             Dashboard
@@ -16,5 +11,5 @@ export default function Dashboard() {
         <Fab aria-label="add">
             <AddIcon/>
         </Fab>
-    </main>)
+    </Paper>)
 }
