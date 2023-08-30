@@ -2,8 +2,8 @@ package officesgorm
 
 import (
 	"context"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/officerepository"
 	"gorm.io/gorm"
-	"lesson4/internal/repositories/officerepository"
 )
 
 type OfficeGorm struct {

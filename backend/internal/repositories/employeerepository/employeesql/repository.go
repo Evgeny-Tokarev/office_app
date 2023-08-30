@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"lesson4/internal/repositories/employeerepository"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employeerepository"
 )
 
 type EmployeeSql struct {

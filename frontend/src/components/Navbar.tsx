@@ -1,52 +1,54 @@
-"use client"
+"use client";
 
-import Link from "next/link";
 import {
     AppBar,
     Box,
     Toolbar,
-    Button,
     IconButton,
-    Icon,
-    Switch,
     Typography,
     Menu,
     MenuItem,
-    useTheme as useMTheme
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import React from "react";
-import {useTheme} from 'next-themes'
+import ThemeSwitcher from "@/components/ThemeSwitcher";
+import {useRouter} from 'next/navigation'
 
-const label = {inputProps: {'aria-label': 'Switch demo'}};
-const options = ['None', 'Atria', 'Callisto', 'Dione', 'Ganymede', 'Hangouts Call', 'Luna', 'Oberon', 'Phobos', 'Pyxis', 'Sedna', 'Titania', 'Triton', 'Umbriel',];
+const menuItems = [{
+    name: 'dashboard', route: '/'
+}, {
+    name: 'offices', route: '/offices'
+}, {name: 'users', route: '/users'}]
 
-const ITEM_HEIGHT = 48;
 export default function Navbar() {
-    const {theme, setTheme} = useTheme()
+    const router = useRouter()
+
+    const [selectedItem, setSelectedItem] = React.useState(menuItems[0].name)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
-    const [mounted, setMounted] = React.useState(false)
 
-    const toggleMenuButton = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
+    const toggleMenuButton = (e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
+        setAnchorEl(e.currentTarget);
     }
-    const handleClose = () => {
+    const selectItemAndClose = (item: {
+        name: string,
+        route: string
+    }) => {
+        setSelectedItem(item.name)
+        router.push(`${item.route}`)
+        closeMenu()
+    };
+    const closeMenu = () => {
         setAnchorEl(null);
     };
 
-    React.useEffect(() => {
-        setMounted(true)
-    }, [])
-
-    if (!mounted) {
-        return null
-    }
-
     return (<Box>
         <AppBar position="static">
-            <Toolbar
-                sx={{background: theme === 'dark' ? 'black' : ''}}>
+            <Toolbar sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            }}>
                 <IconButton
                     size="large"
                     edge="start"
@@ -55,7 +57,17 @@ export default function Navbar() {
                     sx={{mr: 2}}
                     onClick={toggleMenuButton}
                 >
-                    <MenuIcon/>
+                    <div
+                        className="flex justify-between items-center">
+                        <MenuIcon sx={{mb: 0.5, mr: 1}}/>
+                        <Typography
+                            variant="h6"
+                            component="div"
+                            sx={{flexGrow: 1}}
+                        >
+                            Menu
+                        </Typography>
+                    </div>
                 </IconButton>
                 <Menu
                     id="long-menu"
@@ -64,62 +76,17 @@ export default function Navbar() {
                     }}
                     anchorEl={anchorEl}
                     open={open}
-                    onClose={handleClose}
-                    sx={{
-                        maxHeight: ITEM_HEIGHT * 4.5,
-                        width: '20ch',
-                    }}
+                    onClose={closeMenu}
                 >
-                    {options.map((option) => (
-                        <MenuItem key={option}
-                                  selected={option === 'Pyxis'}
-                                  onClick={handleClose}>
-                            {option}
-                        </MenuItem>))}
+                    {menuItems.map((menuItem) => (<MenuItem
+                        key={menuItem.name}
+                        selected={menuItem.name === selectedItem}
+                        onClick={() => selectItemAndClose(menuItem)}>
+                        {menuItem.name}
+                    </MenuItem>))}
                 </Menu>
-                <Typography variant="h6" component="div"
-                            sx={{flexGrow: 1}}>
-                    Menu
-                </Typography>
-                <div
-                    className="flex justify-between items-center">
-                    <Icon>light_mode</Icon>
-                    <Switch
-                        {...label}
-                        defaultChecked
-                        color="default"
-                        onChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}/>
-                    <Icon>dark_mode_icon</Icon>
-                </div>
+                <ThemeSwitcher/>
             </Toolbar>
         </AppBar>
     </Box>);
 }
-// <nav
-//     className="flex justify-between items-center bg-slate-300 dark:bg-slate-800 px-8 py-3">
-//
-//     <Link
-//         className="text-black dark:text-white font-bold"
-//         href={"/"}>
-//         Dashboard
-//     </Link>
-//     <Typography>
-//         {mTheme.palette.mode}
-//     </Typography>
-//     <Typography>
-//         {theme}
-//     </Typography>
-//     <div
-//         className="flex justify-between items-center">
-//         <Icon
-//             sx={{color: theme === 'light' ? 'black' : 'white'}}>light_mode</Icon>
-//         <Switch
-//             {...label}
-//             defaultChecked
-//             color="default"
-//             onChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}/>
-//         <Icon
-//             sx={{color: theme === 'light' ? 'black' : 'white'}}>dark_mode_icon</Icon>
-//     </div>
-//
-// </nav>

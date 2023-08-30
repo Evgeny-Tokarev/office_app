@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"lesson4/internal/repositories/officerepository"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/officerepository"
 )
 
 type OfficeSql struct {

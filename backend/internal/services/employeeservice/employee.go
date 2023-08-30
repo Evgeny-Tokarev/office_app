@@ -2,9 +2,9 @@ package employeeservice
 
 import (
 	"encoding/json"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employeerepository"
 	"github.com/gorilla/mux"
-	"lesson4/internal/repositories"
-	"lesson4/internal/repositories/employeerepository"
 	"net/http"
 	"strconv"
 )

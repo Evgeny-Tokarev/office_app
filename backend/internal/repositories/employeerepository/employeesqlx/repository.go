@@ -2,8 +2,8 @@ package employeesqlx
 
 import (
 	"context"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employeerepository"
 	"github.com/jmoiron/sqlx"
-	"lesson4/internal/repositories/employeerepository"
 )
 
 type EmployeeSqlx struct {

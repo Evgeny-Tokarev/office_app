@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/caarlos0/env/v6"
+	"github.com/evgeny-tokarev/office_app/backend/internal/app"
+	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
-	"lesson4/internal/app"
-	"lesson4/internal/config"
 )
 
 func main() {

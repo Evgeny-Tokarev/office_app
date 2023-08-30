@@ -3,9 +3,9 @@ package officeservice
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/officerepository"
 	"github.com/gorilla/mux"
-	"lesson4/internal/repositories"
-	"lesson4/internal/repositories/officerepository"
 	"net/http"
 	"strconv"
 	"time"
@@ -133,13 +133,8 @@ func (os *OfficeService) Get(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type ListResponse struct {
-	List []GetResponse
-}
-
 func (os *OfficeService) List(w http.ResponseWriter, r *http.Request) {
 	list, err := os.officeRepository.List(r.Context())
-	fmt.Println(list)
 	if err != nil {
 		SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -157,7 +152,7 @@ func (os *OfficeService) List(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(ListResponse{List: response})
+	_ = json.NewEncoder(w).Encode(response)
 
 }
 

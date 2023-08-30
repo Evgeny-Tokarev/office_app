@@ -2,8 +2,8 @@ package employeegorm
 
 import (
 	"context"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employeerepository"
 	"gorm.io/gorm"
-	"lesson4/internal/repositories/employeerepository"
 )
 
 type EmployeeGorm struct {

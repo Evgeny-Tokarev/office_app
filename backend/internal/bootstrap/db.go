@@ -3,11 +3,11 @@ package bootstrap
 import (
 	"database/sql"
 	"fmt"
+	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"lesson4/internal/config"
 )
 
 func InitSqlDB(cfg config.Config) (*sql.DB, error) {

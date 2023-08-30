@@ -1,15 +1,9 @@
-import AddIcon from '@mui/icons-material/Add';
-import {Fab, Typography} from "@mui/material";
-import {Paper} from "@mui/material";
+import React from 'react'
+import {Paper, Typography} from "@mui/material";
 
 export default function Dashboard() {
-    return (<Paper elevation={3} sx={{flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between'}}>
-        <Typography
+    return (<Typography
             variant="h1">
             Dashboard
-        </Typography>
-        <Fab aria-label="add">
-            <AddIcon/>
-        </Fab>
-    </Paper>)
+        </Typography>)
 }
