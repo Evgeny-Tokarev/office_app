@@ -21,5 +21,8 @@ jobs:
       - name: Change to backend directory
         run: cd backend
 
+      - name: Print working directory
+        run: pwd
+
       - name: Test
         run: go test -v -cover ./internal/repositories/...
