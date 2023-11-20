@@ -7,9 +7,9 @@ create table employees
             primary key,
     name text default '' not null,
     age int not null,
-    office_id bigint constraint employees_office_id_fkey references offices (id),
-    created_at timestamp default now(),
-    updated_at timestamp default now()
+    office_id bigint not null constraint employees_office_id_fkey references offices (id),
+    created_at timestamp default now() not null,
+    updated_at timestamp default now() not null
 );
 
 -- +migrate Down

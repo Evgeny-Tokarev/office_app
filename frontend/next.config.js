@@ -1,10 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    modularizeImports: {
+        '@mui/icons-material/?(((\\w*)?/?)*)': {
+            transform: '@mui/icons-material/{{ matches.[1] }}/{{member}}'
+        }
+    },
     reactStrictMode: false,
     transpilePackages: ["@mui/material"],
-    experimental: {
-        appDir: true,
-    },
     compiler: {
         styledComponents: {
             displayName: false,

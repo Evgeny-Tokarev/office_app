@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	_ "github.com/jackc/pgx/stdlib"
-	"github.com/jmoiron/sqlx"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
+
+var TestDB *sql.DB
 
 func InitSqlDB(cfg config.Config) (*sql.DB, error) {
 
-	db, err := sql.Open("pgx", formatConnect(cfg))
+	db, err := sql.Open("pgx", FormatConnect(cfg))
 	if err != nil {
 		return nil, err
 	}
@@ -24,19 +23,7 @@ func InitSqlDB(cfg config.Config) (*sql.DB, error) {
 	return db, nil
 }
 
-func InitSqlxDB(cfg config.Config) (*sqlx.DB, error) {
-	return sqlx.Connect("pgx", formatConnect(cfg))
-}
-
-func InitGormDB(cfg config.Config) (*gorm.DB, error) {
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		cfg.PgHost, cfg.PgUser, cfg.PgPwd, cfg.PgDBName, cfg.PgPort,
-	)
-	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
-}
-
-func formatConnect(cfg config.Config) string {
+func FormatConnect(cfg config.Config) string {
 	return fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.PgUser, cfg.PgPwd, cfg.PgHost, cfg.PgPort, cfg.PgDBName,

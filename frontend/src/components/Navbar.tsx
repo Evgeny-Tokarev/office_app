@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
     AppBar,
@@ -8,10 +8,10 @@ import {
     Typography,
     Menu,
     MenuItem,
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import React from "react";
-import ThemeSwitcher from "@/components/ThemeSwitcher";
+} from '@mui/material'
+import MenuIcon from '@mui/icons-material/Menu'
+import React from "react"
+import ThemeSwitcher from "@/components/ThemeSwitcher"
 import {useRouter} from 'next/navigation'
 
 const menuItems = [{
@@ -24,11 +24,11 @@ export default function Navbar() {
     const router = useRouter()
 
     const [selectedItem, setSelectedItem] = React.useState(menuItems[0].name)
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
+    const open = Boolean(anchorEl)
 
     const toggleMenuButton = (e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
-        setAnchorEl(e.currentTarget);
+        setAnchorEl(e.currentTarget)
     }
     const selectItemAndClose = (item: {
         name: string,
@@ -37,10 +37,10 @@ export default function Navbar() {
         setSelectedItem(item.name)
         router.push(`${item.route}`)
         closeMenu()
-    };
+    }
     const closeMenu = () => {
-        setAnchorEl(null);
-    };
+        setAnchorEl(null)
+    }
 
     return (<Box>
         <AppBar position="static">
@@ -88,5 +88,5 @@ export default function Navbar() {
                 <ThemeSwitcher/>
             </Toolbar>
         </AppBar>
-    </Box>);
+    </Box>)
 }

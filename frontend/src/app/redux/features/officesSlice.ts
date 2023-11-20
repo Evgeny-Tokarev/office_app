@@ -1,60 +1,182 @@
-"use client";
+"use client"
 
-import {createSlice, PayloadAction} from "@reduxjs/toolkit";
-import {type Office} from '@/app/models';
-import api from "@/app/api";
-import {createAsyncThunk} from "@reduxjs/toolkit";
+import {
+    createAsyncThunk, createSlice, type SerializedError
+} from "@reduxjs/toolkit"
+import {type Office} from '@/app/models'
+import api from "@/app/api"
 
-type OfficesState = {
+export type OfficesState = {
     offices: Office[],
+    currentOffice: Office | null,
     loading: boolean,
-    error: null | string,
+    error: null | {
+        code: string,
+        message: string
+    },
 };
 
 const initialState = {
-    offices: [], loading: false, error: null,
-} as OfficesState;
+    offices: [], currentOffice: null, loading: false, error: null,
+} as OfficesState
 
-const dateOptions = {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: true
-} as Intl.DateTimeFormatOptions
 
-export const fetchOffices = createAsyncThunk('offices/fetchOffices', async () => {
-    const response = await api.officesApi.getOffices();
-    response.data.map(item => {
-        item.created_at = new Date(String(item.created_at).replace("UTC", "GMT")).toLocaleString("en-CA", dateOptions)
-        item.updated_at = new Date(String(item.updated_at).replace("UTC", "GMT")).toLocaleString("en-CA", dateOptions)
-        return item
-    })
-    return response.data;
-});
+export const fetchOffices = createAsyncThunk<Office[], void, {
+    rejectValue: SerializedError;
+}>('offices/fetchOffices', async (_, {rejectWithValue}) => {
+    try {
+        const response = await api.officesApi.getOffices()
+        if (response.data?.status === 200) return response.data.data
+        return rejectWithValue({
+            code: response.error?.code,
+            message: response.error?.message
+        } as SerializedError)
+    } catch (err) {
+        return rejectWithValue(err as SerializedError)
+    }
+})
+export const fetchOffice = createAsyncThunk<Office, number, {
+    rejectValue: SerializedError;
+}>('offices/fetchOffice', async (id, {rejectWithValue}) => {
+    try {
+        const response = await api.officesApi.getOffice(id)
+        if (response.data?.status === 200) return response.data.data
+        return rejectWithValue({
+            code: response.error?.code,
+            message: response.error?.message
+        } as SerializedError)
+    } catch (err) {
+        return rejectWithValue(err as SerializedError)
+    }
+})
+export const saveImage = createAsyncThunk<boolean, {id: number, image: File}, {
+    rejectValue: SerializedError;
+}>('offices/saveImage', async ({id, image}, {rejectWithValue}) => {
+    try {
+        const response = await api.officesApi.saveImage(id, image)
+        if (response.data?.status === 200) return response.data.data
+        return rejectWithValue({
+            code: response.error?.code,
+            message: response.error?.message
+        } as SerializedError)
+    } catch (err) {
+        return rejectWithValue(err as SerializedError)
+    }
+})
 
+
+export const updateOffice = createAsyncThunk<Office, Office, {
+    rejectValue: SerializedError;
+}>('offices/updateOffice', async (office, {rejectWithValue}) => {
+    try {
+        office.id = +office.id
+        const response = await api.officesApi.updateOffice(office)
+        if (response.data?.status === 200) return response.data.data
+        return rejectWithValue({
+            code: response.error?.code,
+            message: response.error?.message
+        } as SerializedError)
+    } catch (err) {
+        return rejectWithValue(err as SerializedError)
+    }
+})
+export const deleteOffice = createAsyncThunk<void, number, {
+    rejectValue: SerializedError;
+}>('offices/deleteOffice', async (id, {rejectWithValue}) => {
+    try {
+        const response = await api.officesApi.deleteOffice(id)
+        if (response.data?.status === 200) return
+        return rejectWithValue({
+            code: response.error?.code,
+            message: response.error?.message
+        } as SerializedError)
+    } catch (err) {
+        return rejectWithValue(err as SerializedError)
+    }
+})
+
+export const createOffice = createAsyncThunk<Office, Office, {
+    rejectValue: SerializedError;
+}>('offices/createOffice', async (office, {rejectWithValue}) => {
+    try {
+        const response = await api.officesApi.createOffice(office)
+        console.log(response)
+        if (response.data?.status === 200 || response.data?.status === 201) return response.data.data
+        return rejectWithValue({
+            code: response.error?.code,
+            message: response.error?.message
+        } as SerializedError)
+    } catch (err) {
+        return rejectWithValue(err as SerializedError)
+    }
+})
 export const offices = createSlice({
-    name: "offices",
-    initialState,
-    reducers: {},
-    extraReducers: builder => {
+    name: "offices", initialState, reducers: {}, extraReducers: builder => {
         builder
             .addCase(fetchOffices.pending, state => {
-                state.loading = true;
-                state.error = null;
+                state.loading = true
+                state.error = null
             })
             .addCase(fetchOffices.fulfilled, (state, action) => {
-                state.loading = false;
-                state.offices = action.payload;
-                state.error = null;
+                state.loading = false
+                state.offices = action.payload ?? []
+                state.error = null
             })
             .addCase(fetchOffices.rejected, (state, action) => {
-                state.loading = false;
-                state.offices = [];
-                state.error = action.error.message || 'An error occurred';
-            });
+                state.loading = false
+                state.offices = []
+                state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
+                    code: action.payload?.code || action.error.code || 'Error'}
+            }).addCase(fetchOffice.pending, state => {
+            state.loading = true
+            state.error = null
+        })
+            .addCase(fetchOffice.fulfilled, (state, action) => {
+                state.loading = false
+                state.currentOffice = action.payload
+                state.error = null
+            })
+            .addCase(fetchOffice.rejected, (state, action) => {
+                state.loading = false
+                state.currentOffice = null
+                state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
+                    code: action.payload?.code || action.error.code || 'Error'}
+            })
+            .addCase(updateOffice.pending, state => {
+                state.loading = true
+                state.error = null
+            })
+            .addCase(updateOffice.fulfilled, (state) => {
+                state.loading = false
+                state.error = null
+            }).addCase(updateOffice.rejected, (state, action) => {
+            state.loading = false
+            state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
+                code: action.payload?.code || action.error.code || 'Error'}
+        }).addCase(createOffice.pending, state => {
+            state.loading = true
+            state.error = null
+        })
+            .addCase(createOffice.fulfilled, (state) => {
+                state.loading = false
+                state.error = null
+            }).addCase(createOffice.rejected, (state, action) => {
+            state.loading = false
+            state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
+                code: action.payload?.code || action.error.code || 'Error'}
+        }).addCase(deleteOffice.pending, state => {
+            state.loading = true
+            state.error = null
+        })
+            .addCase(deleteOffice.fulfilled, (state) => {
+                state.loading = false
+                state.error = null
+            }).addCase(deleteOffice.rejected, (state, action) => {
+            state.loading = false
+            state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
+                code: action.payload?.code || action.error.code || 'Error'}
+        })
     },
 })
 
-export default offices.reducer;
+export default offices.reducer

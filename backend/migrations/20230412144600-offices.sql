@@ -1,4 +1,3 @@
-
 -- +migrate Up
 create table offices
 (
@@ -8,7 +7,7 @@ create table offices
     name text default '' not null,
     address text default '' not null,
     created_at timestamp default now() not null,
-    updated_at timestamp default now()
+    updated_at timestamp default now() not null
 );
 
 insert into offices  (name, address)

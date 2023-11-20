@@ -1,0 +1,23 @@
+version: 2
+sql:
+  - engine: "postgresql"
+    queries: "./internal/queries/office_queries.sql"
+    schema:
+      - "./migrations/20230412144600-offices.sql"
+      - "./migrations/20230926211700-add-new-column-to-offices.sql"
+    gen:
+      go:
+        package: "office_repository"
+        out: "./internal/repositories/office_repository"
+        emit_db_tags: true
+
+  - engine: "postgresql"
+    queries: "./internal/queries/employee_queries.sql"
+    schema:
+      - "./migrations/20230412144601-employees.sql"
+      - "./migrations/20231008154400-add-img_file-to-employees.sql"
+    gen:
+      go:
+        package: "employee_repository"
+        out: "./internal/repositories/employee_repository"
+        emit_db_tags: true

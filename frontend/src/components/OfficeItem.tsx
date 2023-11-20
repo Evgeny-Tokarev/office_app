@@ -1,100 +1,160 @@
-"use client";
+"use client"
 
-import * as React from 'react';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import Avatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
+import * as React from 'react'
+import {
+    Typography,
+    Avatar,
+    ListItemAvatar,
+    ListItemText,
+    ListItem
+} from '@mui/material/'
 import {Office} from "@/app/models"
-import {IconButton} from "@mui/material";
-import {DeleteForever, Edit} from "@mui/icons-material";
-import {useRouter} from "next/navigation";
+import {IconButton} from "@mui/material"
+import {DeleteForever, Edit} from "@mui/icons-material"
+import convertDate from "@/app/helpers/dateConverter"
+import {
+    ModalContext
+} from "@/components/ModalProvider"
+import {useDispatch} from "react-redux"
+import {ThunkDispatch} from "@reduxjs/toolkit"
+import {
+    deleteOffice, fetchOffices, OfficesState, updateOffice
+} from "@/app/redux/features/officesSlice"
+import {type AnyAction} from "redux"
+import {useRouter} from "next/navigation"
+
 
 export default function OfficeItem({office}: {
     office: Office
 }) {
+    const dispatch = useDispatch<ThunkDispatch<OfficesState, unknown, AnyAction>>()
     const router = useRouter()
-    const deleteItem = (office: Office) => {
-        console.log("Delete-", office.id)
+    const {
+        setOpenModal, setModalProps
+    } = React.useContext(ModalContext) ?? {}
+    const deleteItem = (e: React.MouseEvent, office: Office) => {
+        e.stopPropagation()
+        const cb = async (result: boolean) => {
+            if (result) {
+                const res = await dispatch(deleteOffice(office.id))
+                if (res.meta.requestStatus === 'fulfilled') dispatch(fetchOffices())
+            }
+            setOpenModal(false)
+        }
+        setOpenModal(true)
+        setModalProps({
+            type: 'warn',
+            title: 'Warning',
+            text: 'Do you want to delete item?',
+            isPermanent: true,
+            withActions: true,
+            actionCallback: cb
+        })
     }
-    const editItem = (office: Office) => {
-        console.log("Edit-", office.id)
-        router.push(`/offices/${office.id}`)
+    const editItem = (e: React.MouseEvent, office: Office) => {
+        e.stopPropagation()
+        const cb = async (result: boolean) => {
+            if (result) {
+                const res = await dispatch(updateOffice(office))
+                if (res.meta.requestStatus === 'fulfilled') dispatch(fetchOffices())
+            }
+            setOpenModal(false)
+        }
+        setOpenModal(true)
+        setModalProps({
+            type: 'office_form',
+            title: `Edit office ${office.name}`,
+            isPermanent: true,
+            actionCallback: cb,
+            formProps: {
+                id: office.id
+            }
+        })
     }
-    return (<ListItem alignItems="flex-start" sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '1rem'
-    }}>
-        <ListItemAvatar>
-            <Avatar alt="Office photo"
-                    src={office.photo}/>
-        </ListItemAvatar>
-        <ListItemText
-            primary={<Typography
+    const openOffice = () => {
+        router.push(`offices/${office.id}`)
+    }
+    return (<ListItem
+        alignItems="flex-start"
+        sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            borderBottom: '1px solid',
+            borderColor: 'text.primary',
+            cursor: 'pointer',
+            '&:hover': {
+                bgcolor: (theme) => theme.palette.action.hover
+        }
+        }}
+        onClick={openOffice}>
+            <ListItemAvatar>
+            <Avatar
+            alt="Office photo"
+            src={office.photo}/>
+            </ListItemAvatar>
+            <ListItemText
+                primary={<Typography
                 component="h3"
                 variant="h5"
                 color="text.primary"
             >{office.name}</Typography>}
-            secondary={<React.Fragment>
-                <Typography
-                    component="span"
-                    variant="body1"
-                    color="text.primary"
-                >
-                    {office.address}
-                </Typography>
-                <br/>
-                <Typography
-                    component="span"
-                    variant="body2"
-                    color="text.primary">
-                    Created {office.created_at}</Typography>
+                secondary={<React.Fragment>
+            <Typography
+                component="span"
+                variant="body1"
+                color="text.primary"
+            >
+        {office.address}
+            </Typography>
+            <br/>
+            <Typography
+                component="span"
+                variant="body2"
+                color="text.primary">
+                Created {convertDate(office.created_at)}</Typography>
             </React.Fragment>}
-        />
-        <div className="flex justify-between items-center">
+                />
+            <div className="flex justify-between items-center">
             <IconButton
                 size="large"
                 edge="start"
-                color="inherit"
                 aria-label="edit"
                 sx={{mr: 2}}
-                onClick={() => editItem(office)}
+                onClick={(e) => editItem(e, office)}
             >
-                <div
-                    className="flex justify-between items-center">
-                    <Edit sx={{mr: 1}}/>
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{flexGrow: 1}}
-                    >
-                        Edit
-                    </Typography>
-                </div>
+            <div
+                className="flex justify-between items-center">
+            <Edit sx={{mr: 1}}/>
+            <Typography
+                variant="h6"
+                component="div"
+                sx={{flexGrow: 1}}
+            >
+            Edit
+            </Typography>
+            </div>
             </IconButton>
             <IconButton
-                size="large"
-                edge="start"
-                color="inherit"
-                aria-label="delete"
-                sx={{mr: 2}}
-                onClick={() => deleteItem(office)}
+            size="large"
+            edge="start"
+            aria-label="delete"
+            sx={{mr: 2}}
+        onClick={(e) => deleteItem(e, office)}
+    >
+        <div
+            className="flex justify-between items-center">
+            <DeleteForever sx={{mr: 1}}/>
+            <Typography
+                variant="h6"
+                component="div"
+                sx={{flexGrow: 1}}
             >
-                <div
-                    className="flex justify-between items-center">
-                    <DeleteForever sx={{mr: 1}}/>
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{flexGrow: 1}}
-                    >
-                        Delete
-                    </Typography>
-                </div>
-            </IconButton>
+                Delete
+            </Typography>
         </div>
-    </ListItem>)
+    </IconButton>
+</div>
+</ListItem>)
 }

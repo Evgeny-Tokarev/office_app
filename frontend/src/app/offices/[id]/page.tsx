@@ -1,75 +1,96 @@
-"use client";
+"use client"
 
-import React from 'react'
-import {Box, TextField, Button} from "@mui/material";
+import React from "react";
+import {ModalContext} from "@/components/ModalProvider";
 import {useDispatch, useSelector} from "react-redux";
-import {
-    fetchOffices
-} from "@/app/redux/features/officesSlice";
-import {RootState} from '@/app/redux/store';
 import {ThunkDispatch} from "@reduxjs/toolkit";
-import {Office} from "@/app/models";
-import {usePathname} from 'next/navigation';
+import {
+    fetchEmployees, EmployeesState, createEmployee
+} from "@/app/redux/features/employeeSlice"
+import {fetchOffice} from "@/app/redux/features/officesSlice"
+import {AnyAction} from "redux";
+import {RootState} from "@/app/redux/store"
+import {Employee} from "@/app/models";
+import {IconButton, List, Typography} from "@mui/material";
+import {AddCircleOutlined} from "@mui/icons-material"
+import dynamic from "next/dynamic";
 
-export default function EditOffice({params}: {
-    params: { id: string | number }
+const NoSSREmployeeItem = dynamic(() => import("@/components/EmployeeItem"), {ssr: false})
+
+export default function Employees({params}: {
+    params: { id: number }
 }) {
-    const dispatch = useDispatch<ThunkDispatch<any, any, any>>();
     const {
-        offices, loading, error
-    } = useSelector((state: RootState) => state.offices);
-    const office: Office | undefined = React.useMemo(() => {
-        if (!offices.length) dispatch(fetchOffices());
-        return offices.find(of => of.id === params.id) || offices[0];
-    }, [offices, params.id]);
-    const [name, setName] = React.useState('');
-    const [address, setAddress] = React.useState('');
-    React.useEffect(() => {
-        if (office) {
-            setName(office.name || '');
-            setAddress(office.address || '');
-        }
-    }, [office]);
-    const pathname = usePathname()
-    const saveOffice = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        console.log(params.id, name, address)
-    }
-    return (<Box
-            component="form"
-            onSubmit={saveOffice}
-            mt={4}
-            sx={{
-                '& .MuiTextField-root': {
-                    m: 1, width: '25ch'
-                },
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center'
-            }}
-            noValidate
-            autoComplete="off"
-        >
-            <div className="flex flex-col items-center">
-                <TextField
-                    error={name.length < 3}
-                    id="name"
-                    label="Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />
-                <TextField
-                    id="address"
-                    label="Address"
-                    value={address}
-                    multiline
-                    maxRows={4}
-                    onChange={(e) => setAddress(e.target.value)}
-                />
-            </div>
-            <Button variant="contained"
-                    type="submit">Save</Button>
-        </Box>
+        setOpenModal, setModalProps
+    } = React.useContext(ModalContext)
+    const dispatch = useDispatch<ThunkDispatch<EmployeesState, unknown, AnyAction>>()
+    const {
+        employees
+    } = useSelector((state: RootState) => state.employees)
+    const {
+        currentOffice
+    } = useSelector((state: RootState) => state.offices)
 
-    )
+
+    React.useEffect(() => {
+        dispatch(fetchOffice(params.id))
+        dispatch(fetchEmployees(params.id))
+    }, [])
+
+    const createNewEmployee = () => {
+        const cb = async (props: unknown) => {
+            if (props && typeof props === 'object') {
+                const partialEmployee: Partial<Employee> = {
+                    id: -1,
+                    name: "",
+                    age: 0,
+                    office_id: params.id,
+                    created_at: "", ...props as Partial<Employee>
+                }
+                const res = await dispatch(createEmployee(partialEmployee as Employee))
+                if (res.meta.requestStatus === 'fulfilled') {
+                    dispatch(fetchEmployees(params.id))
+                    setOpenModal(false)
+                }
+            }
+        }
+        setOpenModal(true)
+        setModalProps({
+            type: 'employee_form',
+            title: `Create new employee record`,
+            isPermanent: true,
+            actionCallback: cb,
+            formProps: {
+                id: -1,
+                office_id: params.id
+            }
+        })
+    }
+    return (<List sx={{
+        width: '100%',
+        bgcolor: 'background.paper',
+        minHeight: '100vh'
+    }}>
+        <Typography
+            align="center"
+            variant="h2"
+            mt={2}
+            sx={{fontWeight: '400'}}>
+            {currentOffice?.name ?? 'tr'}
+        </Typography>
+        <div className="flex items-center">
+            <IconButton
+                size="large"
+                edge="start"
+                aria-label="create new office"
+                sx={{ml: 'auto', mr: 4}}
+                onClick={createNewEmployee}
+            >
+                <AddCircleOutlined sx={{fontSize: '4rem'}}/>
+            </IconButton>
+        </div>
+        {employees.map(employee => <NoSSREmployeeItem
+            employee={employee}
+            key={employee.id}/>)}
+    </List>)
 }

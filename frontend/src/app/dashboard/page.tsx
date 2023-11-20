@@ -1,9 +1,11 @@
 import React from 'react'
-import {Paper, Typography} from "@mui/material";
+import {Typography} from "@mui/material"
 
 export default function Dashboard() {
-    return (<Typography
+    return (<div className="flex-1">
+        <Typography
             variant="h1">
             Dashboard
-        </Typography>)
+        </Typography>
+    </div>)
 }

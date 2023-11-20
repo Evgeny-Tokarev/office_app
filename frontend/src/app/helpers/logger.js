@@ -2,10 +2,11 @@
 
 class Logger {
     constructor () {
-        this.isDebug = process.env.NODE_ENV !== 'production'
+        // this.isDebug = process.env.NODE_ENV !== 'production'
+        this.isDebug = false
     }
 
-    isDebug () {
+    isDebugMode () {
         return this.isDebug
     }
 

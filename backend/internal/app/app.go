@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/bootstrap"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
-	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employeerepository/employeesql"
-	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/officerepository/officessql"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employee_repository"
+	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/office_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/employeeservice"
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/officeservice"
 	"github.com/gorilla/handlers"
@@ -26,8 +26,10 @@ func Run(cfg config.Config) error {
 	}
 
 	router := mux.NewRouter()
-	emplService := employeeservice.New(employeesql.New(db))
-	officeService := officeservice.New(officessql.New(db))
+	employeeQueries := employee_repository.New(db)
+	officeQueries := office_repository.New(db)
+	emplService := employeeservice.New(*employeeQueries)
+	officeService := officeservice.New(*officeQueries)
 
 	emplService.SetHandlers(router)
 	officeService.SetHandlers(router)

@@ -7,4 +7,5 @@ type Config struct {
 	PgDBName string `env:"PG_DB_NAME" envDefault:"db"`
 	PgUser   string `env:"PG_USER" envDefault:"db"`
 	PgPwd    string `env:"PG_PWD" envDefault:"no-db"`
+	LogLvl   string `env:"LOG_LEVEL" envDefault:"DebugLevel"`
 }

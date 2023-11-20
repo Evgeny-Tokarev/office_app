@@ -1,7 +1,9 @@
 import officesApi from './offices'
+import employeesApi from './employees'
 
 
 const api = {
-    officesApi
+    officesApi,
+    employeesApi
 }
 export default api

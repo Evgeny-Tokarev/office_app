@@ -5,9 +5,7 @@ module.exports = {
         "node": true
     },
     "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:react/recommended"
+        'plugin:@next/next/recommended',
     ],
     "overrides": [
         {
@@ -36,7 +34,8 @@ module.exports = {
         "react/react-in-jsx-scope": "off",
         "react/jsx-first-prop-new-line": "warn",
         "react/jsx-max-props-per-line": [1, { "when": "always" }],
-        "react/jsx-indent" : ["error", 4]
+        "react/jsx-indent" : ["error", 4],
+        "semi": ["error", "never"]
     },
     "settings": {
         "react": {
