@@ -11,6 +11,14 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      SERVER_PORT: ${{ env.SERVER_PORT }}
+      PG_PORT: ${{ env.PG_PORT }}
+      PG_HOST: ${{ env.PG_HOST }}
+      PG_DB_NAME: ${{ env.PG_DB_NAME }}
+      PG_USER: ${{ env.PG_USER }}
+      PG_PWD: ${{ env.PG_PWD }}
+      LOG_LEVEL: ${{ env.LOG_LEVEL }}
     services:
       postgres:
         image: postgres:14
@@ -49,13 +57,4 @@ jobs:
 
       - name: Test
         working-directory: ./backend
-        env:
-          SERVER_PORT: 13005
-          PG_PORT: 5458
-          PG_HOST: 0.0.0.0
-          PG_DB_NAME: db
-          PG_USER: db
-          PG_PWD: db
-          LOG_LEVEL: DebugLevel
-
         run: go test -v -cover ./internal/repositories/...

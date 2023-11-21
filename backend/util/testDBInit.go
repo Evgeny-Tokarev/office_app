@@ -8,6 +8,7 @@ import (
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
+	"os"
 	"time"
 )
 
@@ -28,16 +29,20 @@ type Office struct {
 func InitTestDB() (*sql.DB, error) {
 	cfg := config.Config{}
 	var testDB *sql.DB
+	var err error
 
-	err := godotenv.Load("../../../.env")
-	if err != nil {
-		log.Fatalf("unable to load .env file for test: %e", err)
+	if _, err = os.Stat("../../../.env"); err == nil {
+		fmt.Println("1")
+		err := godotenv.Load("../../../.env")
+		if err != nil {
+			log.Fatalf("unable to load .env file for test: %v", err)
+		}
+	} else {
+		fmt.Println("2")
+
 	}
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to retrieve env variables for test, %v", err)
-	}
-	if err := env.Parse(&cfg); err != nil {
-		fmt.Printf("failed to retrieve env variables, %v", err)
 	}
 	fmt.Println("Config for test DB: ", cfg)
 	testDB, err = sql.Open("pgx", bootstrap.FormatConnect(cfg))
