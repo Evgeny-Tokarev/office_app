@@ -42,6 +42,20 @@ jobs:
         working-directory: ./backend
         run: make migrate-up
 
+      - name: Debug Environment
+        run: |
+          pwd
+          ls -al
+
       - name: Test
         working-directory: ./backend
+        env:
+          SERVER_PORT: 13005
+          PG_PORT: 5458
+          PG_HOST: 0.0.0.0
+          PG_DB_NAME: db
+          PG_USER: db
+          PG_PWD: db
+          LOG_LEVEL: DebugLevel
+
         run: go test -v -cover ./internal/repositories/...
