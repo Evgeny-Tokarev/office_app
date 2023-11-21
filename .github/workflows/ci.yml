@@ -12,13 +12,13 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     env:
-      SERVER_PORT: ${{ env.SERVER_PORT }}
-      PG_PORT: ${{ env.PG_PORT }}
-      PG_HOST: ${{ env.PG_HOST }}
-      PG_DB_NAME: ${{ env.PG_DB_NAME }}
-      PG_USER: ${{ env.PG_USER }}
-      PG_PWD: ${{ env.PG_PWD }}
-      LOG_LEVEL: ${{ env.LOG_LEVEL }}
+      SERVER_PORT: ${{ secrets.SERVER_PORT }}
+      PG_PORT: ${{ secrets.PG_PORT }}
+      PG_HOST: ${{ secrets.PG_HOST }}
+      PG_DB_NAME: ${{ secrets.PG_DB_NAME }}
+      PG_USER: ${{ secrets.PG_USER }}
+      PG_PWD: ${{ secrets.PG_PWD }}
+      LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
     services:
       postgres:
         image: postgres:14
