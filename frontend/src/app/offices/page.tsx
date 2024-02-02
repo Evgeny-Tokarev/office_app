@@ -31,27 +31,11 @@ export default function Page() {
     }, [])
 
     const createNewOffice = () => {
-        const cb = async (props: unknown) => {
-            if (props && typeof props === 'object') {
-                const partialOffice: Partial<Office> = {
-                    id: -1,
-                    name: "",
-                    address: "",
-                    created_at: "", ...props as Partial<Office>
-                }
-                const res = await dispatch(createOffice(partialOffice as Office))
-                if (res.meta.requestStatus === 'fulfilled') {
-                    dispatch(fetchOffices())
-                    setOpenModal(false)
-                }
-            }
-        }
         setOpenModal(true)
         setModalProps({
             type: 'office_form',
             title: `Create new office`,
             isPermanent: true,
-            actionCallback: cb,
             formProps: {
                 id: -1
             }

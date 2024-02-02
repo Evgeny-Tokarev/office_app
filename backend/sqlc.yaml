@@ -10,6 +10,7 @@ sql:
         package: "office_repository"
         out: "./internal/repositories/office_repository"
         emit_db_tags: true
+        emit_interface: true
 
   - engine: "postgresql"
     queries: "./internal/queries/employee_queries.sql"
@@ -21,3 +22,15 @@ sql:
         package: "employee_repository"
         out: "./internal/repositories/employee_repository"
         emit_db_tags: true
+        emit_interface: true
+
+  - engine: "postgresql"
+    queries: "./internal/queries/user_queries.sql"
+    schema:
+      - "migrations/20240111205700-users.sql"
+    gen:
+      go:
+        package: "user_repository"
+        out: "./internal/repositories/user_repository"
+        emit_db_tags: true
+        emit_interface: true

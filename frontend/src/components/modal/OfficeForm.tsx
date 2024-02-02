@@ -1,15 +1,15 @@
 import {
-    Box,
-    Button,
-    TextField,
-    Input,
-    InputLabel
+    Box, Button, TextField, Input, InputLabel
 } from "@mui/material"
 import * as React from "react";
 import {
-    createOffice, fetchOffices, OfficesState, updateOffice, saveImage
+    createOffice,
+    fetchOffices,
+    OfficesState,
+    updateOffice,
+    saveImage
 } from "@/app/redux/features/officesSlice";
-import {Office} from "@/app/models";
+import {ModalType, Office} from "@/app/models";
 import {ModalContext} from "@/components/ModalProvider";
 import {useDispatch, useSelector} from "react-redux";
 import {ThunkDispatch} from "@reduxjs/toolkit";
@@ -42,14 +42,13 @@ export const style = {
 export default function OfficeForm({onCloseModal}: {
     onCloseModal: () => void
 }) {
+    const {
+        openModal, setOpenModal, modalProps, setModalProps
+    } = React.useContext(ModalContext)
     const {theme} = useNextTheme()
     const titleInput = React.useRef<HTMLInputElement | null>(null)
     const [titleInputError, setTitleInputError] = React.useState(false)
     const [addressInputError, setAddressInputError] = React.useState(false)
-
-    const {
-        modalProps
-    } = React.useContext(ModalContext)
     const dispatch = useDispatch<ThunkDispatch<OfficesState, unknown, AnyAction>>()
     const {
         offices, loading, error
@@ -73,11 +72,7 @@ export default function OfficeForm({onCloseModal}: {
         if (office) {
             setName(office.name || '')
             setAddress(office.address || '')
-            setImage(office.photo
-                ? office.photo
-                : theme === 'dark'
-                    ? '/image-placeholder-dk.svg'
-                    : '/image-placeholder-lt.svg')
+            setImage(office.photo ? office.photo : theme === 'dark' ? '/image-placeholder-dk.svg' : '/image-placeholder-lt.svg')
         }
     }, [office, theme])
     const saveOffice = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -87,6 +82,7 @@ export default function OfficeForm({onCloseModal}: {
             setAddressInputError(address.length < 3)
             return
         }
+        onCloseModal()
         if (modalProps.formProps && modalProps.formProps.id < 0) {
             const res = await dispatch(createOffice({
                 name: name,
@@ -97,11 +93,10 @@ export default function OfficeForm({onCloseModal}: {
             console.log(res)
             if (res.meta.requestStatus === 'fulfilled') {
                 if (res.payload && 'id' in res.payload && imageFile) {
-                const id = res.payload?.id
-                await saveImageFile(id)
+                    const id = res.payload?.id
+                    await saveImageFile(id)
                 }
                 await dispatch(fetchOffices())
-                onCloseModal()
             }
             return
         }
@@ -116,13 +111,14 @@ export default function OfficeForm({onCloseModal}: {
             if (res.meta.requestStatus === 'fulfilled') {
                 if (imageFile) await saveImageFile(modalProps.formProps.id)
                 await dispatch(fetchOffices())
-                onCloseModal()
             }
         }
     }
-    const saveImageFile = async(id: number) => {
+    const saveImageFile = async (id: number) => {
         if (imageFile) {
-        await dispatch(saveImage({id: id, image: imageFile}))
+            await dispatch(saveImage({
+                id: id, image: imageFile
+            }))
         }
     }
     const onTitleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -141,50 +137,54 @@ export default function OfficeForm({onCloseModal}: {
 
     }
     return (<Box
-            component="form"
-            onSubmit={saveOffice}
-            mt={4}
-            sx={modalProps?.type === 'office_form' ? style.form : {"display": "none"}}
-            noValidate
-            autoComplete="off"
-        >
-            <div
-                className="flex flex-col items-center w-full">
-                <TextField
-                    error={titleInputError}
-                    id="name"
-                    label="Name"
-                    value={name}
-                    fullWidth
-                    inputRef={titleInput}
-                    helperText={titleInputError ? 'Name should have at least 3 characters' : ''}
-                    onChange={(e) => onTitleInputChange(e)}
-                />
-                <TextField
-                    error={addressInputError}
-                    id="address"
-                    label="Address"
-                    value={address}
-                    multiline
-                    fullWidth
-                    maxRows={4}
-                    helperText={addressInputError ? 'Address should have at least 3 characters' : ''}
-                    onChange={(e) => onAddressInputChange(e)}
-                />
-                <InputLabel sx={{height: '5rem', width: '5rem', cursor: 'pointer'}}>
-                    <img
-                        className="w-full h-full"
-                        src={image}
-                         alt="Office image"
-                         loading="lazy">
-                    </img>
-                    <Input type="file" sx={style.fileInput}
-                           onChange={uploadImageFile}/>
-                </InputLabel>
-            </div>
-            <Button
-                variant="contained"
-                sx={{mt: 4}}
-                type="submit">Save</Button>
-        </Box>)
+        component="form"
+        onSubmit={saveOffice}
+        mt={4}
+        sx={modalProps?.type === 'office_form' ? style.form : {"display": "none"}}
+        noValidate
+        autoComplete="off"
+    >
+        <div
+            className="flex flex-col items-center w-full">
+            <TextField
+                error={titleInputError}
+                id="name"
+                label="Name"
+                value={name}
+                fullWidth
+                inputRef={titleInput}
+                helperText={titleInputError ? 'Name should have at least 3 characters' : ''}
+                onChange={(e) => onTitleInputChange(e)}
+            />
+            <TextField
+                error={addressInputError}
+                id="address"
+                label="Address"
+                value={address}
+                multiline
+                fullWidth
+                maxRows={4}
+                helperText={addressInputError ? 'Address should have at least 3 characters' : ''}
+                onChange={(e) => onAddressInputChange(e)}
+            />
+            <InputLabel sx={{
+                height: '5rem',
+                width: '5rem',
+                cursor: 'pointer'
+            }}>
+                <img
+                    className="w-full h-full"
+                    src={image}
+                    alt="Office image"
+                    loading="lazy">
+                </img>
+                <Input type="file" sx={style.fileInput}
+                       onChange={uploadImageFile}/>
+            </InputLabel>
+        </div>
+        <Button
+            variant="contained"
+            sx={{mt: 4}}
+            type="submit">Save</Button>
+    </Box>)
 }

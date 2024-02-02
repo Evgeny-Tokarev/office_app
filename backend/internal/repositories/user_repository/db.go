@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.25.0
 
-package employee_repository
+package user_repository
 
 import (
 	"context"

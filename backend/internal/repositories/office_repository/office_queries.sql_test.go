@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/util"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
@@ -26,7 +27,6 @@ func TestMain(m *testing.M) {
 
 func TestCreateOffice(t *testing.T) {
 	arg, office, err := CreateRandomOffice(testDb)
-
 	require.NoError(t, err)
 	require.Equal(t, arg.Name, office.Name)
 	require.Equal(t, arg.Address, office.Address)
@@ -39,6 +39,9 @@ func TestGetOffice(t *testing.T) {
 	_, office1, err1 := CreateRandomOffice(testDb)
 	require.NoError(t, err1)
 	office2, err2 := TestOfficeQueries.GetOffice(context.Background(), office1.ID)
+	_, err3 := TestOfficeQueries.GetOffice(context.Background(), office1.ID+1)
+	require.Error(t, err3)
+	assert.EqualError(t, err3, "sql: no rows in result set")
 	require.NoError(t, err2)
 	require.NotEmpty(t, office2)
 
@@ -94,4 +97,21 @@ func TestAttachePhoto(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, testParams.ImgFile, office2.ImgFile)
 	TestOfficeQueries.DeleteOffice(context.Background(), office2.ID)
+}
+
+func TestGetImagePath(t *testing.T) {
+	_, office1, err := CreateRandomOffice(testDb)
+	require.NoError(t, err)
+	testParams := AttachePhotoParams{
+		ImgFile: sql.NullString{String: util.RandomString(10), Valid: true},
+		ID:      office1.ID,
+	}
+
+	err = TestOfficeQueries.AttachePhoto(context.Background(), testParams)
+	require.NoError(t, err)
+	office1, err = TestOfficeQueries.GetOffice(context.Background(), office1.ID)
+	require.NoError(t, err)
+	imgPath, err := TestOfficeQueries.GetImagePath(context.Background(), office1.ID)
+	require.NoError(t, err)
+	require.Equal(t, office1.ImgFile.String, imgPath)
 }

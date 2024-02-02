@@ -8,14 +8,20 @@ run-server:
 migrate-up:
 	sql-migrate up --env="local"
 
+migrate-up1:
+	sql-migrate up --env="local" -limit=1
+
 migrate-down:
 	sql-migrate down --env="local"
+
+migrate-down1:
+	sql-migrate down --env="local" -limit=1
 
 sqlc:
 	sqlc generate
 
 test:
-	go test -v -cover
+	 find . -name "*_test.go" -exec dirname {} \; | sort -u | xargs go test -v -cover
 
 .DEFAULT_GOAL := run-server
 

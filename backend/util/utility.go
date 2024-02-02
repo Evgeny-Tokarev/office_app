@@ -3,7 +3,6 @@ package util
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -35,8 +34,7 @@ func GetUniqueFileName(filePath string) string {
 	}
 }
 func SendTranscribedError(w http.ResponseWriter, errText string, status int) {
-
-	responseBody, err := json.Marshal(errors.New(errText))
+	responseBody, err := json.Marshal(ErrorResponse{Status: status, Message: errText})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

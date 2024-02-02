@@ -25,3 +25,14 @@ func RandomString(n int) string {
 	}
 	return sb.String()
 }
+
+func RandomTime(from time.Time, to time.Time) time.Time {
+	if to.Before(from) {
+		panic("endTime should be after startTime")
+	}
+
+	diff := to.Sub(from)
+	randomDiff := time.Duration(rand.Int63n(int64(diff)))
+
+	return from.Add(randomDiff)
+}

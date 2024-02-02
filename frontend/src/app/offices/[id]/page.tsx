@@ -50,6 +50,7 @@ export default function Employees({params}: {
                 const res = await dispatch(createEmployee(partialEmployee as Employee))
                 if (res.meta.requestStatus === 'fulfilled') {
                     dispatch(fetchEmployees(params.id))
+                    console.log("closing modal...")
                     setOpenModal(false)
                 }
             }

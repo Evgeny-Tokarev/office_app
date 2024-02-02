@@ -35,11 +35,13 @@ export default function OfficeItem({office}: {
     const deleteItem = (e: React.MouseEvent, office: Office) => {
         e.stopPropagation()
         const cb = async (result: boolean) => {
+            setOpenModal(false)
             if (result) {
                 const res = await dispatch(deleteOffice(office.id))
-                if (res.meta.requestStatus === 'fulfilled') dispatch(fetchOffices())
+                if (res.meta.requestStatus === 'fulfilled') {
+                    dispatch(fetchOffices())
+                }
             }
-            setOpenModal(false)
         }
         setOpenModal(true)
         setModalProps({
@@ -53,12 +55,14 @@ export default function OfficeItem({office}: {
     }
     const editItem = (e: React.MouseEvent, office: Office) => {
         e.stopPropagation()
+        setOpenModal(false)
         const cb = async (result: boolean) => {
             if (result) {
                 const res = await dispatch(updateOffice(office))
-                if (res.meta.requestStatus === 'fulfilled') dispatch(fetchOffices())
+                if (res.meta.requestStatus === 'fulfilled') {
+                    dispatch(fetchOffices())
+                }
             }
-            setOpenModal(false)
         }
         setOpenModal(true)
         setModalProps({
@@ -86,37 +90,37 @@ export default function OfficeItem({office}: {
             cursor: 'pointer',
             '&:hover': {
                 bgcolor: (theme) => theme.palette.action.hover
-        }
+            }
         }}
         onClick={openOffice}>
-            <ListItemAvatar>
+        <ListItemAvatar>
             <Avatar
-            alt="Office photo"
-            src={office.photo}/>
-            </ListItemAvatar>
-            <ListItemText
-                primary={<Typography
+                alt="Office photo"
+                src={office.photo}/>
+        </ListItemAvatar>
+        <ListItemText
+            primary={<Typography
                 component="h3"
                 variant="h5"
                 color="text.primary"
             >{office.name}</Typography>}
-                secondary={<React.Fragment>
-            <Typography
-                component="span"
-                variant="body1"
-                color="text.primary"
-            >
-        {office.address}
-            </Typography>
-            <br/>
-            <Typography
-                component="span"
-                variant="body2"
-                color="text.primary">
-                Created {convertDate(office.created_at)}</Typography>
+            secondary={<React.Fragment>
+                <Typography
+                    component="span"
+                    variant="body1"
+                    color="text.primary"
+                >
+                    {office.address}
+                </Typography>
+                <br/>
+                <Typography
+                    component="span"
+                    variant="body2"
+                    color="text.primary">
+                    Created {convertDate(office.created_at)}</Typography>
             </React.Fragment>}
-                />
-            <div className="flex justify-between items-center">
+        />
+        <div className="flex justify-between items-center">
             <IconButton
                 size="large"
                 edge="start"
@@ -124,37 +128,37 @@ export default function OfficeItem({office}: {
                 sx={{mr: 2}}
                 onClick={(e) => editItem(e, office)}
             >
-            <div
-                className="flex justify-between items-center">
-            <Edit sx={{mr: 1}}/>
-            <Typography
-                variant="h6"
-                component="div"
-                sx={{flexGrow: 1}}
-            >
-            Edit
-            </Typography>
-            </div>
+                <div
+                    className="flex justify-between items-center">
+                    <Edit sx={{mr: 1}}/>
+                    <Typography
+                        variant="h6"
+                        component="div"
+                        sx={{flexGrow: 1}}
+                    >
+                        Edit
+                    </Typography>
+                </div>
             </IconButton>
             <IconButton
-            size="large"
-            edge="start"
-            aria-label="delete"
-            sx={{mr: 2}}
-        onClick={(e) => deleteItem(e, office)}
-    >
-        <div
-            className="flex justify-between items-center">
-            <DeleteForever sx={{mr: 1}}/>
-            <Typography
-                variant="h6"
-                component="div"
-                sx={{flexGrow: 1}}
+                size="large"
+                edge="start"
+                aria-label="delete"
+                sx={{mr: 2}}
+                onClick={(e) => deleteItem(e, office)}
             >
-                Delete
-            </Typography>
+                <div
+                    className="flex justify-between items-center">
+                    <DeleteForever sx={{mr: 1}}/>
+                    <Typography
+                        variant="h6"
+                        component="div"
+                        sx={{flexGrow: 1}}
+                    >
+                        Delete
+                    </Typography>
+                </div>
+            </IconButton>
         </div>
-    </IconButton>
-</div>
-</ListItem>)
+    </ListItem>)
 }

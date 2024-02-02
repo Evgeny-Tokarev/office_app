@@ -10,6 +10,10 @@ export type OfficesState = {
     offices: Office[],
     currentOffice: Office | null,
     loading: boolean,
+    infoState: null | {
+        title: string,
+        text: string
+    },
     error: null | {
         code: string,
         message: string
@@ -17,7 +21,7 @@ export type OfficesState = {
 };
 
 const initialState = {
-    offices: [], currentOffice: null, loading: false, error: null,
+    offices: [], currentOffice: null, loading: false, error: null, infoState: null
 } as OfficesState
 
 
@@ -100,8 +104,7 @@ export const createOffice = createAsyncThunk<Office, Office, {
 }>('offices/createOffice', async (office, {rejectWithValue}) => {
     try {
         const response = await api.officesApi.createOffice(office)
-        console.log(response)
-        if (response.data?.status === 200 || response.data?.status === 201) return response.data.data
+        if (response.data?.status && Math.floor(response.data.status / 100) === 2) return response.data.data
         return rejectWithValue({
             code: response.error?.code,
             message: response.error?.message
@@ -155,24 +158,36 @@ export const offices = createSlice({
                 code: action.payload?.code || action.error.code || 'Error'}
         }).addCase(createOffice.pending, state => {
             state.loading = true
+            state.infoState = null
             state.error = null
         })
-            .addCase(createOffice.fulfilled, (state) => {
+            .addCase(createOffice.fulfilled, (state, action) => {
                 state.loading = false
+                state.infoState = {
+                    title: "New office created",
+                    text: `Office name: ${action.payload.name}`
+                }
                 state.error = null
             }).addCase(createOffice.rejected, (state, action) => {
             state.loading = false
+            state.infoState = null
             state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
                 code: action.payload?.code || action.error.code || 'Error'}
         }).addCase(deleteOffice.pending, state => {
             state.loading = true
             state.error = null
+            state.infoState = null
         })
             .addCase(deleteOffice.fulfilled, (state) => {
                 state.loading = false
                 state.error = null
+                state.infoState = {
+                    title: "Office was deleted",
+                    text: ""
+                }
             }).addCase(deleteOffice.rejected, (state, action) => {
             state.loading = false
+            state.infoState = null
             state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
                 code: action.payload?.code || action.error.code || 'Error'}
         })

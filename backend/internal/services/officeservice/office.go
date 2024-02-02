@@ -1,13 +1,9 @@
 package officeservice
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/chai2010/webp"
-	"github.com/disintegration/imaging"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/office_repository"
 	"github.com/evgeny-tokarev/office_app/backend/util"
 	"github.com/gorilla/mux"
@@ -16,7 +12,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 )
 
 type OfficeService struct {
@@ -56,51 +51,9 @@ func (ofs *OfficeService) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = r.ParseMultipartForm(10 << 20) // 10MB is the maximum size of the uploaded file
+	webpFilePath, status, err := util.SaveImage(r)
 	if err != nil {
-		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	file, header, err := r.FormFile("image")
-	if err != nil {
-		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
-
-	img, err := imaging.Decode(file)
-	if err != nil {
-		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	var buffer bytes.Buffer
-
-	err = webp.Encode(&buffer, img, nil)
-	if err != nil {
-		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	parts := strings.Split(header.Filename, ".")
-	var filename string
-	if len(parts) > 1 {
-		filename = strings.Join(parts[:len(parts)-1], ".")
-	} else {
-		filename = parts[0]
-	}
-	webpFilePath := util.GetUniqueFileName("./images/" + filename + ".webp")
-	fmt.Println(filename, webpFilePath)
-	webpFile, err := os.Create(webpFilePath)
-	if err != nil {
-		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer webpFile.Close()
-
-	_, err = webpFile.Write(buffer.Bytes())
-	if err != nil {
-		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
-		return
+		util.SendTranscribedError(w, err.Error(), status)
 	}
 	params := office_repository.AttachePhotoParams{
 		ImgFile: sql.NullString{String: filepath.Join("images", filepath.Base(webpFilePath)), Valid: true},

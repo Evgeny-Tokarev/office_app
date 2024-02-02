@@ -44,11 +44,24 @@ export default function BasicModal() {
         openModal, setOpenModal, modalProps, setModalProps
     } = React.useContext(ModalContext)
     const {
-        error, loading
+        error, loading, infoState
     } = useSelector((state: RootState) => state.offices)
     const {setShowLoader} = useContext(LoaderContext)
     const [initialModalProps, setInitialModalProps] = React.useState<ModalProps>(initialProps)
     const [initialModalOpenState, setInitialModalOpenState] = React.useState(false)
+    React.useEffect(() => {
+        if (infoState) {
+            setInitialModalOpenState(openModal)
+            setInitialModalProps(modalProps)
+            setOpenModal(true)
+            setModalProps({
+                type: 'info', title: infoState.title, text: infoState.text, isPermanent: false,
+                style: {
+                    bgcolor: 'green'
+                }
+            })
+        }
+    }, [infoState])
     React.useEffect(() => {
         if (error) {
             setInitialModalOpenState(openModal)
