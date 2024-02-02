@@ -145,3 +145,4 @@ frontend/.next
 backend/**/images/
 
 backend/docker-data
+.idea/**/*.xml
