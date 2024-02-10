@@ -14,17 +14,27 @@ import (
 	"strconv"
 )
 
-type OfficeService struct {
-	officeRepository office_repository.Queries
+type OfficeService interface {
+	SetHandlers(*mux.Router)
+	Create(http.ResponseWriter, *http.Request)
+	Get(http.ResponseWriter, *http.Request)
+	List(http.ResponseWriter, *http.Request)
+	Update(http.ResponseWriter, *http.Request)
+	Delete(http.ResponseWriter, *http.Request)
+	Upload(http.ResponseWriter, *http.Request)
 }
 
-func New(officeRepository office_repository.Queries) *OfficeService {
-	return &OfficeService{
+type officeService struct {
+	officeRepository office_repository.Querier
+}
+
+func New(officeRepository office_repository.Querier) OfficeService {
+	return &officeService{
 		officeRepository: officeRepository,
 	}
 }
 
-func (ofs *OfficeService) SetHandlers(router *mux.Router) {
+func (ofs *officeService) SetHandlers(router *mux.Router) {
 	router.HandleFunc("/offices", ofs.Create).Methods(http.MethodPost)
 	router.HandleFunc("/offices/{id}", ofs.Get).Methods(http.MethodGet)
 	router.HandleFunc("/offices", ofs.List).Methods(http.MethodGet)
@@ -38,7 +48,7 @@ type CreateRequest struct {
 	Address string `json:"address"`
 }
 
-func (ofs *OfficeService) Upload(w http.ResponseWriter, r *http.Request) {
+func (ofs *officeService) Upload(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
@@ -73,6 +83,7 @@ func (ofs *OfficeService) Upload(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateResponse struct {
+	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Address   string `json:"address"`
 	CreatedAt string `json:"created_at"`
@@ -80,7 +91,7 @@ type CreateResponse struct {
 	ImgFile   string `json:"img_file"`
 }
 
-func (ofs *OfficeService) Create(w http.ResponseWriter, r *http.Request) {
+func (ofs *officeService) Create(w http.ResponseWriter, r *http.Request) {
 
 	req := &CreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
@@ -125,7 +136,7 @@ type GetResponse struct {
 	Photo     string `json:"photo"`
 }
 
-func (ofs *OfficeService) Get(w http.ResponseWriter, r *http.Request) {
+func (ofs *officeService) Get(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -152,7 +163,7 @@ func (ofs *OfficeService) Get(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (ofs *OfficeService) List(w http.ResponseWriter, r *http.Request) {
+func (ofs *officeService) List(w http.ResponseWriter, r *http.Request) {
 	list, err := ofs.officeRepository.ListOffices(r.Context())
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
@@ -185,7 +196,7 @@ type UpdateRequest struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-func (ofs *OfficeService) Update(w http.ResponseWriter, r *http.Request) {
+func (ofs *officeService) Update(w http.ResponseWriter, r *http.Request) {
 	req := &UpdateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		if err.Error() == errors.New("EOF").Error() {
@@ -213,7 +224,7 @@ func (ofs *OfficeService) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (ofs *OfficeService) Delete(w http.ResponseWriter, r *http.Request) {
+func (ofs *officeService) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
