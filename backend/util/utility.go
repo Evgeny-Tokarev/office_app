@@ -3,6 +3,7 @@ package util
 import (
 	"database/sql"
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -52,4 +53,12 @@ func ConvertToRegularString(ss sql.NullString) string {
 		return ss.String
 	}
 	return ""
+}
+
+func WriteResponse(w http.ResponseWriter, statusCode int, response map[string]interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Error("Error writing JSON response:", err)
+	}
 }

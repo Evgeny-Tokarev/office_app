@@ -14,27 +14,17 @@ import (
 	"strconv"
 )
 
-type OfficeService interface {
-	SetHandlers(*mux.Router)
-	Create(http.ResponseWriter, *http.Request)
-	Get(http.ResponseWriter, *http.Request)
-	List(http.ResponseWriter, *http.Request)
-	Update(http.ResponseWriter, *http.Request)
-	Delete(http.ResponseWriter, *http.Request)
-	Upload(http.ResponseWriter, *http.Request)
-}
-
-type officeService struct {
+type OfficeService struct {
 	officeRepository office_repository.Querier
 }
 
-func New(officeRepository office_repository.Querier) OfficeService {
-	return &officeService{
+func New(officeRepository office_repository.Querier) *OfficeService {
+	return &OfficeService{
 		officeRepository: officeRepository,
 	}
 }
 
-func (ofs *officeService) SetHandlers(router *mux.Router) {
+func (ofs *OfficeService) SetHandlers(router *mux.Router) {
 	router.HandleFunc("/offices", ofs.Create).Methods(http.MethodPost)
 	router.HandleFunc("/offices/{id}", ofs.Get).Methods(http.MethodGet)
 	router.HandleFunc("/offices", ofs.List).Methods(http.MethodGet)
@@ -48,7 +38,7 @@ type CreateRequest struct {
 	Address string `json:"address"`
 }
 
-func (ofs *officeService) Upload(w http.ResponseWriter, r *http.Request) {
+func (ofs *OfficeService) Upload(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
@@ -91,7 +81,7 @@ type CreateResponse struct {
 	ImgFile   string `json:"img_file"`
 }
 
-func (ofs *officeService) Create(w http.ResponseWriter, r *http.Request) {
+func (ofs *OfficeService) Create(w http.ResponseWriter, r *http.Request) {
 
 	req := &CreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
@@ -136,7 +126,7 @@ type GetResponse struct {
 	Photo     string `json:"photo"`
 }
 
-func (ofs *officeService) Get(w http.ResponseWriter, r *http.Request) {
+func (ofs *OfficeService) Get(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -163,7 +153,7 @@ func (ofs *officeService) Get(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (ofs *officeService) List(w http.ResponseWriter, r *http.Request) {
+func (ofs *OfficeService) List(w http.ResponseWriter, r *http.Request) {
 	list, err := ofs.officeRepository.ListOffices(r.Context())
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
@@ -196,7 +186,7 @@ type UpdateRequest struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-func (ofs *officeService) Update(w http.ResponseWriter, r *http.Request) {
+func (ofs *OfficeService) Update(w http.ResponseWriter, r *http.Request) {
 	req := &UpdateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		if err.Error() == errors.New("EOF").Error() {
@@ -224,7 +214,7 @@ func (ofs *officeService) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (ofs *officeService) Delete(w http.ResponseWriter, r *http.Request) {
+func (ofs *OfficeService) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -232,14 +222,25 @@ func (ofs *officeService) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	imagePath, err := ofs.officeRepository.GetImagePath(r.Context(), int64(id))
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if imagePath != "" {
+		if err := os.Remove(imagePath); err != nil {
+			util.WriteResponse(w, http.StatusOK, map[string]interface{}{
+				"Status":  http.StatusOK,
+				"Message": "Office deleted, but image file deletion failed",
+			})
+		}
+	}
+
 	if err := ofs.officeRepository.DeleteOffice(r.Context(), int64(id)); err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	imagePath, err := ofs.officeRepository.GetImagePath(r.Context(), int64(id))
-	if err := os.Remove(imagePath); err != nil {
-		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+
 	w.WriteHeader(http.StatusOK)
 }

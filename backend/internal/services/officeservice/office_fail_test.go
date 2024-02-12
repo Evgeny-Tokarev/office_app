@@ -80,12 +80,12 @@ func (osu *OfficeServiceUnitFailSuite) TestCreateOffice() {
 		var recorder http.ResponseWriter
 		var responseBody []byte
 		if testCase.name == "Encoding Failure" {
-			recorder = NewCustomResponseRecorder()
+			recorder = util.NewCustomResponseRecorder()
 		} else {
 			recorder = httptest.NewRecorder()
 		}
 		osu.router.ServeHTTP(recorder, req)
-		customRecorder, ok := recorder.(*CustomResponseRecorder)
+		customRecorder, ok := recorder.(*util.CustomResponseRecorder)
 		if !ok {
 			responseBody = recorder.(*httptest.ResponseRecorder).Body.Bytes()
 		} else {
@@ -99,28 +99,6 @@ func (osu *OfficeServiceUnitFailSuite) TestCreateOffice() {
 		osu.Require().Equal(errorResponse.Status, testCase.expectedCode)
 		osu.Require().Equal(errorResponse.Message, testCase.expectedError)
 	}
-}
-
-type CustomResponseRecorder struct {
-	*httptest.ResponseRecorder
-	encodingError error
-	useCustom     bool
-}
-
-func NewCustomResponseRecorder() *CustomResponseRecorder {
-	return &CustomResponseRecorder{
-		ResponseRecorder: httptest.NewRecorder(),
-		encodingError:    errors.New("encoding failure"),
-		useCustom:        true,
-	}
-}
-
-func (cr *CustomResponseRecorder) Write(b []byte) (int, error) {
-	if cr.useCustom {
-		cr.useCustom = false
-		return 0, cr.encodingError
-	}
-	return cr.ResponseRecorder.Write(b)
 }
 
 //	func (osu *OfficeServiceUnitFailSuite) TestGetOffice() {

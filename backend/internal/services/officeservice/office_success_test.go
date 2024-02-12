@@ -1,6 +1,7 @@
 package officeservice
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/office_repository"
@@ -108,8 +109,8 @@ func (osu *OfficeServiceUnitSuite) TestCreateOffice() {
 }
 
 func (osu *OfficeServiceUnitSuite) TestDeleteOffice() {
+	osu.querier.EXPECT().GetImagePath(mock.Anything, osu.office.ID).Return(osu.office.ImgFile.String, nil).Times(1)
 	osu.querier.EXPECT().DeleteOffice(mock.Anything, osu.office.ID).Return(nil).Times(1)
-	osu.querier.EXPECT().GetImagePath(mock.Anything, osu.office.ID).Return("", nil).Times(1)
 	requestBody := fmt.Sprintf(`{"Name": "%s", "Address": "%s"}`, osu.office.Name, osu.office.Address)
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/offices/%d", osu.server.URL, osu.office.ID), strings.NewReader(requestBody))
 	if err != nil {
@@ -118,7 +119,12 @@ func (osu *OfficeServiceUnitSuite) TestDeleteOffice() {
 	req.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
 	osu.router.ServeHTTP(recorder, req)
-	fmt.Println("recorder: ", recorder)
+	responseBody := recorder.Body.Bytes()
+	var errorResponse util.ErrorResponse
+	err = json.Unmarshal(responseBody, &errorResponse)
+	if err != nil {
+		osu.FailNowf("Error unmarshalling response: ", err.Error())
+	}
 	osu.Assert().NoError(err)
 	osu.Assert().Equal(recorder.Code, http.StatusOK)
 }
@@ -131,5 +137,6 @@ func RandomOffice() office_repository.Office {
 		Address:   util.RandomString(10),
 		CreatedAt: rt,
 		UpdatedAt: rt,
+		ImgFile:   sql.NullString{String: util.RandomString(10), Valid: true},
 	}
 }
