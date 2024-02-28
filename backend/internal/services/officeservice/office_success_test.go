@@ -17,8 +17,6 @@ import (
 	"time"
 )
 
-const timeLayout = "2006-01-02 15:04:05 -0700 MST"
-
 type OfficeServiceUnitSuite struct {
 	suite.Suite
 	router  *mux.Router
@@ -67,8 +65,8 @@ func (osu *OfficeServiceUnitSuite) TestGetOffice() {
 	osu.Assert().Equal(http.StatusOK, recorder.Code)
 	var response GetResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &response)
-	createdAt, err1 := time.Parse(timeLayout, response.CreatedAt)
-	UpdatedAt, err2 := time.Parse(timeLayout, response.UpdatedAt)
+	createdAt, err1 := time.Parse(util.TimeLayout, response.CreatedAt)
+	UpdatedAt, err2 := time.Parse(util.TimeLayout, response.UpdatedAt)
 	osu.Assert().NoError(err)
 	osu.Assert().NoError(err1)
 	osu.Assert().NoError(err2)
@@ -96,8 +94,8 @@ func (osu *OfficeServiceUnitSuite) TestCreateOffice() {
 	osu.Assert().Equal(http.StatusCreated, recorder.Code)
 	var response CreateResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &response)
-	createdAt, err1 := time.Parse(timeLayout, response.CreatedAt)
-	UpdatedAt, err2 := time.Parse(timeLayout, response.UpdatedAt)
+	createdAt, err1 := time.Parse(util.TimeLayout, response.CreatedAt)
+	UpdatedAt, err2 := time.Parse(util.TimeLayout, response.UpdatedAt)
 	osu.Assert().NoError(err)
 	osu.Assert().NoError(err1)
 	osu.Assert().NoError(err2)

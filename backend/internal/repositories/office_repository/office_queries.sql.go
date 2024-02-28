@@ -8,7 +8,6 @@ package office_repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 )
 
@@ -67,7 +66,6 @@ select COALESCE(img_file, '') from offices where id = $1
 `
 
 func (q *Queries) GetImagePath(ctx context.Context, id int64) (string, error) {
-	fmt.Println("Unfortunately it's real implementation")
 	row := q.db.QueryRowContext(ctx, getImagePath, id)
 	var img_file string
 	err := row.Scan(&img_file)

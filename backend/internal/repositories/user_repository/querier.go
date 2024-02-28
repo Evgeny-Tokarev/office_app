@@ -13,8 +13,10 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteUser(ctx context.Context, id int64) error
 	GetImagePath(ctx context.Context, id int64) (string, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
 	// @sql postgresql
-	GetUser(ctx context.Context, id int64) (User, error)
+	GetUserById(ctx context.Context, id int64) (User, error)
+	GetUserByName(ctx context.Context, name string) (User, error)
 	ListUsers(ctx context.Context) ([]ListUsersRow, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error

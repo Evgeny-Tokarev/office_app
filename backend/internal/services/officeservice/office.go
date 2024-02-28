@@ -192,7 +192,7 @@ func (ofs *OfficeService) Update(w http.ResponseWriter, r *http.Request) {
 		if err.Error() == errors.New("EOF").Error() {
 			err = errors.New("empty office body")
 		}
-		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if req.Name == "" || req.Address == "" {

@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/evgeny-tokarev/office_app/backend/internal/bootstrap"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employee_repository"
@@ -17,11 +18,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
-func Run(cfg config.Config) error {
+var secret string
 
+func Run(cfg config.Config) error {
+	secret = cfg.JwtSecret
 	db, err := bootstrap.InitSqlDB(cfg)
 	if err != nil {
 		return err
@@ -38,6 +42,8 @@ func Run(cfg config.Config) error {
 	emplService.SetHandlers(router)
 	officeService.SetHandlers(router)
 	userService.SetHandlers(router)
+
+	router.Use(TokenMiddleware)
 
 	// CORS
 	header := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
@@ -69,4 +75,34 @@ func gracefullyShutdown(ctx context.Context, cancel context.CancelFunc, server *
 		log.Warning(err)
 	}
 	cancel()
+}
+
+func TokenMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && (r.URL.Path == "/user" || r.URL.Path == "/login") {
+			next.ServeHTTP(w, r)
+			return
+		}
+		tokenString := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
+		fmt.Println("tokenString: ", tokenString)
+		if tokenString == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			fmt.Println("Token: ", token)
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(secret), nil
+		})
+		if err != nil || !token.Valid {
+			fmt.Println("Error parsing token:", err)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

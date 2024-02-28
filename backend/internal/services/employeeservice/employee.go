@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/chai2010/webp"
 	"github.com/disintegration/imaging"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employee_repository"
@@ -231,7 +232,10 @@ type UpdateRequest struct {
 func (es *EmployeeService) Update(w http.ResponseWriter, r *http.Request) {
 	req := &UpdateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		if err.Error() == errors.New("EOF").Error() {
+			err = errors.New("empty office body")
+		}
+		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

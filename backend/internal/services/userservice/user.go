@@ -2,10 +2,13 @@ package userservice
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/user_repository"
 	"github.com/evgeny-tokarev/office_app/backend/util"
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"strconv"
 )
 
 type UserService struct {
@@ -20,6 +23,7 @@ func New(userRepository user_repository.Querier) *UserService {
 
 func (us *UserService) SetHandlers(router *mux.Router) {
 	router.HandleFunc("/user", us.Create).Methods(http.MethodPost)
+	router.HandleFunc("/login", us.Login).Methods(http.MethodPost)
 	//router.HandleFunc("/offices/{id}", ofs.Get).Methods(http.MethodGet)
 	//router.HandleFunc("/offices", ofs.List).Methods(http.MethodGet)
 	//router.HandleFunc("/offices", ofs.Update).Methods(http.MethodPut)
@@ -35,12 +39,8 @@ type CreateRequest struct {
 }
 
 type CreateResponse struct {
-	ID        int64  `db:"id"`
-	Name      string `db:"name"`
-	Email     string `db:"email"`
-	Role      string `db:"role"`
-	CreatedAt string `db:"created_at"`
-	ImgFile   string `db:"img_file"`
+	user_repository.User
+	Token string `db:"token"`
 }
 
 func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
@@ -74,15 +74,150 @@ func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := util.GenerateToken(int(user.ID))
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(&CreateResponse{
-		ID:        user.ID,
-		Name:      user.Name,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05 -0700 MST"),
-		ImgFile:   util.ConvertToRegularString(user.ImgFile),
+		User: user_repository.User{
+			ID:                user.ID,
+			Name:              user.Name,
+			Email:             user.Email,
+			Role:              user.Role,
+			HashedPassword:    user.HashedPassword,
+			PasswordChangedAt: user.PasswordChangedAt,
+			CreatedAt:         user.CreatedAt,
+			ImgFile:           user.ImgFile,
+		},
+		Token: token,
 	}); err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
+
+type loginRequest struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type loginResponse struct {
+	User  user_repository.User `json:"user"`
+	Token string               `json:"token"`
+}
+
+func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
+	req := &loginRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		if err.Error() == errors.New("EOF").Error() {
+			err = errors.New("empty office body")
+		}
+		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.Name == "" || req.Email == "" || req.Password == "" {
+		util.SendTranscribedError(w, "all fields are required", http.StatusBadRequest)
+		return
+	}
+
+	user1, err := us.userRepository.GetUserByName(r.Context(), req.Name)
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	user2, err := us.userRepository.GetUserByEmail(r.Context(), req.Email)
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if user1.ID != user2.ID {
+		util.SendTranscribedError(w, "wrong username or email", http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user1.HashedPassword), []byte(req.Password))
+	if err != nil {
+		util.SendTranscribedError(w, "incorrect password", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := util.GenerateToken(int(user1.ID))
+	if err != nil {
+		http.Error(w, "Error generating token", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(&loginResponse{
+		User: user_repository.User{
+			ID:                user1.ID,
+			Name:              user1.Name,
+			Email:             user1.Email,
+			Role:              user1.Role,
+			HashedPassword:    user1.HashedPassword,
+			PasswordChangedAt: user1.PasswordChangedAt,
+			CreatedAt:         user1.CreatedAt,
+			ImgFile:           user1.ImgFile,
+		},
+		Token: token,
+	}); err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+type GetResponse struct {
+	ID                int64  `json:"id"`
+	Name              string `json:"name"`
+	Email             string `json:"email"`
+	Role              string `json:"role"`
+	HashedPassword    string `json:"hashed_password"`
+	PasswordChangedAt string `json:"password_changed_at"`
+	CreatedAt         string `json:"created_at"`
+	ImgFile           string `json:"img_file"`
+}
+
+func (us *UserService) Get(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	u, err := us.userRepository.GetUserById(r.Context(), int64(id))
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(&GetResponse{
+		ID:                u.ID,
+		Name:              u.Name,
+		Email:             u.Email,
+		Role:              u.Role,
+		HashedPassword:    u.HashedPassword,
+		PasswordChangedAt: u.PasswordChangedAt.Format(util.TimeLayout),
+		CreatedAt:         u.CreatedAt.Format(util.TimeLayout),
+		ImgFile:           u.ImgFile.String,
+	})
+}
+
+//func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+//	http.SetCookie(w, &http.Cookie{
+//		Name:     "token",
+//		Value:    "",
+//		Path:     "/",
+//		HttpOnly: true,
+//		Expires:  time.Unix(0, 0),
+//	})
+//
+//	http.Redirect(w, r, "/login", http.StatusFound)
+//}
