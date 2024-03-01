@@ -1,29 +1,39 @@
 package userservice
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
+	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/user_repository"
+	"github.com/evgeny-tokarev/office_app/backend/internal/token"
 	"github.com/evgeny-tokarev/office_app/backend/util"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type UserService struct {
 	userRepository user_repository.Querier
+	tokenMaker     token.Maker
 }
 
-func New(userRepository user_repository.Querier) *UserService {
+func New(userRepository user_repository.Querier, cfg config.Config) (*UserService, error) {
+	tokenMaker, err := token.NewJWTMaker(cfg.JwtSecret)
+	if err != nil {
+		return nil, err
+	}
 	return &UserService{
 		userRepository: userRepository,
-	}
+		tokenMaker:     tokenMaker,
+	}, nil
 }
 
 func (us *UserService) SetHandlers(router *mux.Router) {
 	router.HandleFunc("/user", us.Create).Methods(http.MethodPost)
-	router.HandleFunc("/login", us.Login).Methods(http.MethodPost)
+	router.HandleFunc("/user/login", us.Login).Methods(http.MethodPost)
 	//router.HandleFunc("/offices/{id}", ofs.Get).Methods(http.MethodGet)
 	//router.HandleFunc("/offices", ofs.List).Methods(http.MethodGet)
 	//router.HandleFunc("/offices", ofs.Update).Methods(http.MethodPut)
@@ -74,7 +84,7 @@ func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := util.GenerateToken(int(user.ID))
+	token, err := us.tokenMaker.CreateToken(user.Name, time.Hour)
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -125,12 +135,20 @@ func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
 
 	user1, err := us.userRepository.GetUserByName(r.Context(), req.Name)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			util.SendTranscribedError(w, err.Error(), http.StatusNotFound)
+			return
+		}
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	user2, err := us.userRepository.GetUserByEmail(r.Context(), req.Email)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			util.SendTranscribedError(w, err.Error(), http.StatusNotFound)
+			return
+		}
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

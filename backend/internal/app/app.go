@@ -37,7 +37,10 @@ func Run(cfg config.Config) error {
 	userQueries := user_repository.New(db)
 	emplService := employeeservice.New(*employeeQueries)
 	officeService := officeservice.New(officeQueries)
-	userService := userservice.New(userQueries)
+	userService, err := userservice.New(userQueries, cfg)
+	if err != nil {
+		return err
+	}
 
 	emplService.SetHandlers(router)
 	officeService.SetHandlers(router)
