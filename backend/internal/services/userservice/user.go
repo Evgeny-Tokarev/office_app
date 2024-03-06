@@ -17,7 +17,7 @@ import (
 
 type UserService struct {
 	userRepository user_repository.Querier
-	tokenMaker     token.Maker
+	TokenMaker     token.Maker
 }
 
 func New(userRepository user_repository.Querier, cfg config.Config) (*UserService, error) {
@@ -27,7 +27,7 @@ func New(userRepository user_repository.Querier, cfg config.Config) (*UserServic
 	}
 	return &UserService{
 		userRepository: userRepository,
-		tokenMaker:     tokenMaker,
+		TokenMaker:     tokenMaker,
 	}, nil
 }
 
@@ -84,7 +84,7 @@ func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := us.tokenMaker.CreateToken(user.Name, time.Hour)
+	token, err := us.TokenMaker.CreateToken(user.Name, time.Hour)
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -115,8 +115,18 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	User  user_repository.User `json:"user"`
+	User  UserForLoginResponse `json:"user"`
 	Token string               `json:"token"`
+}
+
+type UserForLoginResponse struct {
+	ID                int64          `db:"id"`
+	Name              string         `db:"name"`
+	Email             string         `db:"email"`
+	Role              string         `db:"role"`
+	PasswordChangedAt time.Time      `db:"password_changed_at"`
+	CreatedAt         time.Time      `db:"created_at"`
+	ImgFile           sql.NullString `db:"img_file"`
 }
 
 func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
@@ -164,23 +174,23 @@ func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := util.GenerateToken(int(user1.ID))
+	token, err := us.TokenMaker.CreateToken(user1.Name, time.Hour)
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	user := UserForLoginResponse{
+		ID:                user1.ID,
+		Name:              user1.Name,
+		Email:             user1.Email,
+		Role:              user1.Role,
+		PasswordChangedAt: user1.PasswordChangedAt,
+		CreatedAt:         user1.CreatedAt,
+		ImgFile:           user1.ImgFile,
+	}
 	if err := json.NewEncoder(w).Encode(&loginResponse{
-		User: user_repository.User{
-			ID:                user1.ID,
-			Name:              user1.Name,
-			Email:             user1.Email,
-			Role:              user1.Role,
-			HashedPassword:    user1.HashedPassword,
-			PasswordChangedAt: user1.PasswordChangedAt,
-			CreatedAt:         user1.CreatedAt,
-			ImgFile:           user1.ImgFile,
-		},
+		User:  user,
 		Token: token,
 	}); err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)

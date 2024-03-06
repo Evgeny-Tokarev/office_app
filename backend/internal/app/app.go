@@ -3,28 +3,48 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/evgeny-tokarev/office_app/backend/internal/bootstrap"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
+	"github.com/evgeny-tokarev/office_app/backend/internal/middlware"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employee_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/office_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/user_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/employeeservice"
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/officeservice"
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/userservice"
+	"github.com/evgeny-tokarev/office_app/backend/internal/token"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 )
 
 var secret string
 
-func Run(cfg config.Config) error {
+type Server struct {
+	config     config.Config
+	tokenMaker token.Maker
+}
+
+func NewServer(config config.Config, tokenType string) (*Server, error) {
+	tokenMaker, err := token.NewMaker(tokenType, config.JwtSecret)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
+	}
+
+	server := &Server{
+		config:     config,
+		tokenMaker: tokenMaker,
+	}
+
+	return server, nil
+}
+
+func (s *Server) Run(cfg config.Config) error {
+	log.Info("Config: ", cfg)
 	secret = cfg.JwtSecret
 	db, err := bootstrap.InitSqlDB(cfg)
 	if err != nil {
@@ -46,7 +66,7 @@ func Run(cfg config.Config) error {
 	officeService.SetHandlers(router)
 	userService.SetHandlers(router)
 
-	router.Use(TokenMiddleware)
+	router.Use(middlware.TokenMiddleware(userService))
 
 	// CORS
 	header := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
@@ -78,34 +98,4 @@ func gracefullyShutdown(ctx context.Context, cancel context.CancelFunc, server *
 		log.Warning(err)
 	}
 	cancel()
-}
-
-func TokenMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost && (r.URL.Path == "/user" || r.URL.Path == "/login") {
-			next.ServeHTTP(w, r)
-			return
-		}
-		tokenString := strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", 1)
-		fmt.Println("tokenString: ", tokenString)
-		if tokenString == "" {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			fmt.Println("Token: ", token)
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(secret), nil
-		})
-		if err != nil || !token.Valid {
-			fmt.Println("Error parsing token:", err)
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
 }
