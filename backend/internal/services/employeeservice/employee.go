@@ -18,10 +18,10 @@ import (
 )
 
 type EmployeeService struct {
-	employeeRepository employee_repository.Queries
+	employeeRepository employee_repository.Querier
 }
 
-func New(employeeRepository employee_repository.Queries) *EmployeeService {
+func New(employeeRepository employee_repository.Querier) *EmployeeService {
 	return &EmployeeService{
 		employeeRepository: employeeRepository,
 	}

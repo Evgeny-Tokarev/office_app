@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/user_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/token"
@@ -56,6 +57,7 @@ type CreateResponse struct {
 func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 	req := &CreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		fmt.Println("Fc: ", err.Error())
 		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -88,6 +90,7 @@ func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 	}
+	fmt.Println("Created user and token", user, token)
 
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(&CreateResponse{

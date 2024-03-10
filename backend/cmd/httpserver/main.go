@@ -17,11 +17,11 @@ func main() {
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to retrieve env variables, %v", err)
 	}
-	server, err := app.NewServer(cfg, "paseto")
+	app, err := app.NewApp(cfg, "paseto")
 	if err != nil {
 		log.Fatal("error running http server ", err)
 	}
-	if err := server.Run(cfg); err != nil {
+	if err := app.Run(cfg); err != nil {
 		log.Fatal("error running http server ", err)
 	}
 }

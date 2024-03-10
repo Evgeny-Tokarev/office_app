@@ -20,7 +20,7 @@ import (
 type OfficeServiceUnitSuite struct {
 	suite.Suite
 	router  *mux.Router
-	querier *mocks.MockQuerier
+	querier *mocks.MockOffice
 	server  *httptest.Server
 	office  office_repository.Office
 }
@@ -38,7 +38,7 @@ func (osu *OfficeServiceUnitSuite) SetupTest() {
 }
 
 func setupTestServer(osu *OfficeServiceUnitSuite) {
-	querierMock := mocks.NewMockQuerier(osu.T())
+	querierMock := mocks.NewMockOffice(osu.T())
 	officeService := New(querierMock)
 	router := mux.NewRouter()
 	officeService.SetHandlers(router)

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/bootstrap"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
@@ -24,40 +25,52 @@ import (
 
 var secret string
 
-type Server struct {
+type App struct {
 	config     config.Config
 	tokenMaker token.Maker
+	store      Store
 }
 
-func NewServer(config config.Config, tokenType string) (*Server, error) {
+type Store struct {
+	Employee_repo *employee_repository.Queries
+	Office_repo   *office_repository.Queries
+	User_repo     *user_repository.Queries
+}
+
+func NewStore(db *sql.DB) *Store {
+	return &Store{
+		Employee_repo: employee_repository.New(db),
+		Office_repo:   office_repository.New(db),
+		User_repo:     user_repository.New(db),
+	}
+}
+
+func NewApp(config config.Config, tokenType string) (*App, error) {
 	tokenMaker, err := token.NewMaker(tokenType, config.JwtSecret)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
-
-	server := &Server{
+	db, err := bootstrap.InitSqlDB(config)
+	if err != nil {
+		return nil, err
+	}
+	storage := NewStore(db)
+	app := &App{
 		config:     config,
 		tokenMaker: tokenMaker,
+		store:      *storage,
 	}
 
-	return server, nil
+	return app, nil
 }
 
-func (s *Server) Run(cfg config.Config) error {
+func (a *App) Run(cfg config.Config) error {
 	log.Info("Config: ", cfg)
 	secret = cfg.JwtSecret
-	db, err := bootstrap.InitSqlDB(cfg)
-	if err != nil {
-		return err
-	}
-
 	router := mux.NewRouter()
-	employeeQueries := employee_repository.New(db)
-	officeQueries := office_repository.New(db)
-	userQueries := user_repository.New(db)
-	emplService := employeeservice.New(*employeeQueries)
-	officeService := officeservice.New(officeQueries)
-	userService, err := userservice.New(userQueries, cfg)
+	emplService := employeeservice.New(a.store.Employee_repo)
+	officeService := officeservice.New(a.store.Office_repo)
+	userService, err := userservice.New(a.store.User_repo, cfg)
 	if err != nil {
 		return err
 	}
