@@ -1,7 +1,6 @@
 package token
 
 import (
-	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/util"
 	"github.com/o1egl/paseto"
 	"github.com/stretchr/testify/require"
@@ -59,7 +58,6 @@ func TestInvalidPasetoToken(t *testing.T) {
 	}
 
 	token, err := maker.paseto.Encrypt(maker.symmetricKey, payload, nil)
-	fmt.Println(err)
 	require.NoError(t, err)
 
 	err = maker.paseto.Decrypt(token, []byte(key2), nil, nil)
