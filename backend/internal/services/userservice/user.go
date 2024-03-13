@@ -12,9 +12,14 @@ import (
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"sort"
 	"strconv"
 	"time"
 )
+
+//todo: create tests for all methods
 
 type UserService struct {
 	userRepository user_repository.Querier
@@ -32,14 +37,14 @@ func New(userRepository user_repository.Querier, cfg config.Config) (*UserServic
 	}, nil
 }
 
-func (us *UserService) SetHandlers(router *mux.Router) {
+func (us *UserService) SetHandlers(router, authRoutes *mux.Router) {
 	router.HandleFunc("/user", us.Create).Methods(http.MethodPost)
 	router.HandleFunc("/user/login", us.Login).Methods(http.MethodPost)
-	//router.HandleFunc("/offices/{id}", ofs.Get).Methods(http.MethodGet)
-	//router.HandleFunc("/offices", ofs.List).Methods(http.MethodGet)
-	//router.HandleFunc("/offices", ofs.Update).Methods(http.MethodPut)
-	//router.HandleFunc("/offices/{id}", ofs.Delete).Methods(http.MethodDelete)
-	//router.HandleFunc("/offices/{id}/image", ofs.Upload).Methods(http.MethodPost)
+	authRoutes.HandleFunc("/offices/{id}", us.Get).Methods(http.MethodGet)
+	router.HandleFunc("/offices", us.List).Methods(http.MethodGet)
+	router.HandleFunc("/offices", us.Update).Methods(http.MethodPut)
+	router.HandleFunc("/offices/{id}", us.Delete).Methods(http.MethodDelete)
+	router.HandleFunc("/offices/{id}/image", us.Upload).Methods(http.MethodPost)
 }
 
 type CreateRequest struct {
@@ -86,11 +91,11 @@ func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := us.TokenMaker.CreateToken(user.Name, time.Hour)
+	t, err := us.TokenMaker.CreateToken(user.Name, user.Role, time.Hour)
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 	}
-	fmt.Println("Created user and token", user, token)
+	fmt.Println("Created user and token", user, t)
 
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(&CreateResponse{
@@ -104,7 +109,7 @@ func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 			CreatedAt:         user.CreatedAt,
 			ImgFile:           user.ImgFile,
 		},
-		Token: token,
+		Token: t,
 	}); err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -177,7 +182,7 @@ func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := us.TokenMaker.CreateToken(user1.Name, time.Hour)
+	t, err := us.TokenMaker.CreateToken(user1.Name, user1.Role, time.Hour)
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
@@ -194,7 +199,7 @@ func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewEncoder(w).Encode(&loginResponse{
 		User:  user,
-		Token: token,
+		Token: t,
 	}); err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -214,6 +219,11 @@ type GetResponse struct {
 }
 
 func (us *UserService) Get(w http.ResponseWriter, r *http.Request) {
+	owner := r.Context().Value("owner").(string)
+	if util.ReqOwners[owner] < 2 {
+		util.SendTranscribedError(w, "Forbidden: Insufficient privileges", http.StatusForbidden)
+		return
+	}
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -241,14 +251,136 @@ func (us *UserService) Get(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-//func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-//	http.SetCookie(w, &http.Cookie{
-//		Name:     "token",
-//		Value:    "",
-//		Path:     "/",
-//		HttpOnly: true,
-//		Expires:  time.Unix(0, 0),
-//	})
-//
-//	http.Redirect(w, r, "/login", http.StatusFound)
-//}
+func (us *UserService) List(w http.ResponseWriter, r *http.Request) {
+	owner := r.Context().Value("owner").(string)
+	if util.ReqOwners[owner] < 2 {
+		util.SendTranscribedError(w, "Forbidden: Insufficient privileges", http.StatusForbidden)
+		return
+	}
+	list, err := us.userRepository.ListUsers(r.Context())
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	response := make([]GetResponse, 0, len(list))
+	for _, e := range list {
+		response = append(response, GetResponse{
+			ID:                e.ID,
+			Name:              e.Name,
+			Email:             e.Email,
+			Role:              e.Role,
+			HashedPassword:    e.HashedPassword,
+			PasswordChangedAt: e.PasswordChangedAt.Format(util.TimeLayout),
+			CreatedAt:         e.CreatedAt.Format(util.TimeLayout),
+			ImgFile:           e.ImgFile.String,
+		})
+	}
+	sort.SliceStable(response, func(i, j int) bool {
+		return response[i].ID < response[j].ID
+	})
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(response)
+
+}
+
+type UpdateRequest struct {
+	ID    int64  `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+}
+
+func (us *UserService) Update(w http.ResponseWriter, r *http.Request) {
+	req := &UpdateRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		if err.Error() == errors.New("EOF").Error() {
+			err = errors.New("empty user body")
+		}
+		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.Name == "" || req.Email == "" || req.Role == "" {
+		util.SendTranscribedError(w, "all fields are required", http.StatusBadRequest)
+		return
+	}
+
+	o := user_repository.UpdateUserParams{
+		ID:    req.ID,
+		Name:  req.Name,
+		Email: req.Email,
+		Role:  req.Role,
+	}
+
+	if err := us.userRepository.UpdateUser(r.Context(), o); err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (us *UserService) Delete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	imagePath, err := us.userRepository.GetImagePath(r.Context(), int64(id))
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if imagePath != "" {
+		if err := os.Remove(imagePath); err != nil {
+			util.WriteResponse(w, http.StatusOK, map[string]interface{}{
+				"Status":  http.StatusOK,
+				"Message": "Office deleted, but image file deletion failed",
+			})
+		}
+	}
+
+	if err := us.userRepository.DeleteUser(r.Context(), int64(id)); err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (us *UserService) Upload(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	oldImagePath, err := us.userRepository.GetImagePath(r.Context(), id)
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	webpFilePath, status, err := util.SaveImage(r)
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), status)
+	}
+	params := user_repository.AttachePhotoParams{
+		ImgFile: sql.NullString{String: filepath.Join("images", filepath.Base(webpFilePath)), Valid: true},
+		ID:      id,
+	}
+	if err := us.userRepository.AttachePhoto(r.Context(), params); err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	} else if oldImagePath != "" {
+		err = os.Remove(oldImagePath)
+		if err != nil {
+			util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	w.WriteHeader(http.StatusCreated)
+}

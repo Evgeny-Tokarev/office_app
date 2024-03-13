@@ -41,7 +41,7 @@ func setupTestServer(osu *OfficeServiceUnitSuite) {
 	querierMock := mocks.NewMockOffice(osu.T())
 	officeService := New(querierMock)
 	router := mux.NewRouter()
-	officeService.SetHandlers(router)
+	officeService.SetHandlers(router, router)
 	osu.router = router
 	osu.querier = querierMock
 	osu.server = httptest.NewServer(router)

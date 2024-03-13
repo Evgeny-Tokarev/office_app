@@ -23,8 +23,6 @@ import (
 	"syscall"
 )
 
-var secret string
-
 type App struct {
 	config     config.Config
 	tokenMaker token.Maker
@@ -32,16 +30,16 @@ type App struct {
 }
 
 type Store struct {
-	Employee_repo *employee_repository.Queries
-	Office_repo   *office_repository.Queries
-	User_repo     *user_repository.Queries
+	EmployeeRepo *employee_repository.Queries
+	OfficeRepo   *office_repository.Queries
+	UserRepo     *user_repository.Queries
 }
 
 func NewStore(db *sql.DB) *Store {
 	return &Store{
-		Employee_repo: employee_repository.New(db),
-		Office_repo:   office_repository.New(db),
-		User_repo:     user_repository.New(db),
+		EmployeeRepo: employee_repository.New(db),
+		OfficeRepo:   office_repository.New(db),
+		UserRepo:     user_repository.New(db),
 	}
 }
 
@@ -66,20 +64,20 @@ func NewApp(config config.Config, tokenType string) (*App, error) {
 
 func (a *App) Run(cfg config.Config) error {
 	log.Info("Config: ", cfg)
-	secret = cfg.JwtSecret
 	router := mux.NewRouter()
-	emplService := employeeservice.New(a.store.Employee_repo)
-	officeService := officeservice.New(a.store.Office_repo)
-	userService, err := userservice.New(a.store.User_repo, cfg)
+	authRoutes := router.PathPrefix("/").Subrouter()
+	emplService := employeeservice.New(a.store.EmployeeRepo)
+	officeService := officeservice.New(a.store.OfficeRepo)
+	userService, err := userservice.New(a.store.UserRepo, cfg)
 	if err != nil {
 		return err
 	}
 
-	emplService.SetHandlers(router)
-	officeService.SetHandlers(router)
-	userService.SetHandlers(router)
+	emplService.SetHandlers(router, authRoutes)
+	officeService.SetHandlers(router, authRoutes)
+	userService.SetHandlers(router, authRoutes)
 
-	router.Use(middlware.TokenMiddleware(userService))
+	authRoutes.Use(middlware.TokenMiddleware(userService))
 
 	// CORS
 	header := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})

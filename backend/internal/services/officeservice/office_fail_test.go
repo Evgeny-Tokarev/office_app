@@ -14,6 +14,8 @@ import (
 	"testing"
 )
 
+//todo: write tests for all functions
+
 type OfficeServiceUnitFailSuite struct {
 	OfficeServiceUnitSuite
 }

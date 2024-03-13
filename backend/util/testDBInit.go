@@ -2,7 +2,6 @@ package util
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/evgeny-tokarev/office_app/backend/internal/bootstrap"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
@@ -32,19 +31,15 @@ func InitTestDB() (*sql.DB, error) {
 	var err error
 
 	if _, err = os.Stat("../../../.env"); err == nil {
-		fmt.Println("1")
 		err := godotenv.Load("../../../.env")
 		if err != nil {
 			log.Fatalf("unable to load .env file for test: %v", err)
 		}
-	} else {
-		fmt.Println("2")
-
 	}
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to retrieve env variables for test, %v", err)
 	}
-	fmt.Println("Config for test DB: ", cfg)
+	log.Debug("Config for test DB: ", cfg)
 	testDB, err = sql.Open("pgx", bootstrap.FormatConnect(cfg))
 	if err != nil {
 		return nil, err

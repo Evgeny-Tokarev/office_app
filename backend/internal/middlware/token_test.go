@@ -45,7 +45,7 @@ func setupTestServer(mus *MiddlewareUnitSuite) {
 	userService, err := userservice.New(querierMock, cfg)
 	require.NoError(mus.T(), err)
 	mus.router = mux.NewRouter()
-	userService.SetHandlers(mus.router)
+	userService.SetHandlers(mus.router, mus.router)
 	mus.router.Use(TokenMiddleware(userService))
 	mus.tokenMaker = userService.TokenMaker
 	mus.router.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) {
@@ -96,12 +96,13 @@ func addAuthorization(
 	tokenMaker token.Maker,
 	authorizationType string,
 	username string,
+	role string,
 	duration time.Duration,
 ) {
-	token, err := tokenMaker.CreateToken(username, duration)
+	authToken, err := tokenMaker.CreateToken(username, role, duration)
 	require.NoError(t, err)
 
-	authorizationHeader := fmt.Sprintf("%s %s", authorizationType, token)
+	authorizationHeader := fmt.Sprintf("%s %s", authorizationType, authToken)
 	request.Header.Set(util.AuthorizationType, authorizationHeader)
 }
 
@@ -113,7 +114,15 @@ func (mus *MiddlewareUnitSuite) TestAuthMiddlware() {
 	}{{
 		name: "OK",
 		setUpAuth: func(t *testing.T, request *http.Request, maker token.Maker) {
-			addAuthorization(mus.T(), request, maker, util.AuthorizationTypeBearer, mus.user.Name, time.Minute)
+			addAuthorization(
+				mus.T(),
+				request,
+				maker,
+				util.AuthorizationTypeBearer,
+				mus.user.Name,
+				mus.user.Role,
+				time.Minute,
+			)
 		},
 		checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 			status := recorder.Result().StatusCode
@@ -131,7 +140,15 @@ func (mus *MiddlewareUnitSuite) TestAuthMiddlware() {
 		{
 			name: "UnsupportedAuthorization",
 			setUpAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(mus.T(), request, tokenMaker, "unsupported", mus.user.Name, time.Minute)
+				addAuthorization(
+					mus.T(),
+					request,
+					tokenMaker,
+					"unsupported",
+					mus.user.Name,
+					mus.user.Role,
+					time.Minute,
+				)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -140,7 +157,15 @@ func (mus *MiddlewareUnitSuite) TestAuthMiddlware() {
 		{
 			name: "InvalidAuthorizationFormat",
 			setUpAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(mus.T(), request, tokenMaker, "", mus.user.Name, time.Minute)
+				addAuthorization(
+					mus.T(),
+					request,
+					tokenMaker,
+					"",
+					mus.user.Name,
+					mus.user.Role,
+					time.Minute,
+				)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -149,7 +174,15 @@ func (mus *MiddlewareUnitSuite) TestAuthMiddlware() {
 		{
 			name: "ExpiredToken",
 			setUpAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(mus.T(), request, tokenMaker, "", mus.user.Name, -time.Minute)
+				addAuthorization(
+					mus.T(),
+					request,
+					tokenMaker,
+					"",
+					mus.user.Name,
+					mus.user.Role,
+					-time.Minute,
+				)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)

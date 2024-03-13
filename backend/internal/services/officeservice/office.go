@@ -24,13 +24,13 @@ func New(officeRepository office_repository.Querier) *OfficeService {
 	}
 }
 
-func (ofs *OfficeService) SetHandlers(router *mux.Router) {
-	router.HandleFunc("/offices", ofs.Create).Methods(http.MethodPost)
-	router.HandleFunc("/offices/{id}", ofs.Get).Methods(http.MethodGet)
-	router.HandleFunc("/offices", ofs.List).Methods(http.MethodGet)
-	router.HandleFunc("/offices", ofs.Update).Methods(http.MethodPut)
-	router.HandleFunc("/offices/{id}", ofs.Delete).Methods(http.MethodDelete)
-	router.HandleFunc("/offices/{id}/image", ofs.Upload).Methods(http.MethodPost)
+func (ofs *OfficeService) SetHandlers(_, authRoutes *mux.Router) {
+	authRoutes.HandleFunc("/offices", ofs.Create).Methods(http.MethodPost)
+	authRoutes.HandleFunc("/offices/{id}", ofs.Get).Methods(http.MethodGet)
+	authRoutes.HandleFunc("/offices", ofs.List).Methods(http.MethodGet)
+	authRoutes.HandleFunc("/offices", ofs.Update).Methods(http.MethodPut)
+	authRoutes.HandleFunc("/offices/{id}", ofs.Delete).Methods(http.MethodDelete)
+	authRoutes.HandleFunc("/offices/{id}/image", ofs.Upload).Methods(http.MethodPost)
 }
 
 type CreateRequest struct {

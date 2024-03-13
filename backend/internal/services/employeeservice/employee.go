@@ -5,11 +5,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/chai2010/webp"
 	"github.com/disintegration/imaging"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employee_repository"
 	"github.com/evgeny-tokarev/office_app/backend/util"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,14 +30,13 @@ func New(employeeRepository employee_repository.Querier) *EmployeeService {
 	}
 }
 
-func (es *EmployeeService) SetHandlers(router *mux.Router) {
-
-	router.HandleFunc("/employees", es.Create).Methods(http.MethodPost)
-	router.HandleFunc("/employees/{id}", es.Get).Methods(http.MethodGet)
-	router.HandleFunc("/employees", es.List).Methods(http.MethodGet)
-	router.HandleFunc("/employees", es.Update).Methods(http.MethodPut)
-	router.HandleFunc("/employees/{id}", es.Delete).Methods(http.MethodDelete)
-	router.HandleFunc("/employees/{id}/image", es.Upload).Methods(http.MethodPost)
+func (es *EmployeeService) SetHandlers(_, authRoutes *mux.Router) {
+	authRoutes.HandleFunc("/employees", es.Create).Methods(http.MethodPost)
+	authRoutes.HandleFunc("/employees/{id}", es.Get).Methods(http.MethodGet)
+	authRoutes.HandleFunc("/employees", es.List).Methods(http.MethodGet)
+	authRoutes.HandleFunc("/employees", es.Update).Methods(http.MethodPut)
+	authRoutes.HandleFunc("/employees/{id}", es.Delete).Methods(http.MethodDelete)
+	authRoutes.HandleFunc("/employees/{id}/image", es.Upload).Methods(http.MethodPost)
 }
 
 type CreateRequest struct {
@@ -67,7 +69,12 @@ func (es *EmployeeService) Upload(w http.ResponseWriter, r *http.Request) {
 		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
+
+	defer func(file multipart.File) {
+		if closeError := file.Close(); closeError != nil {
+			fmt.Println("Error closing file:", closeError)
+		}
+	}(file)
 
 	img, err := imaging.Decode(file)
 	if err != nil {
@@ -95,7 +102,12 @@ func (es *EmployeeService) Upload(w http.ResponseWriter, r *http.Request) {
 		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	defer webpFile.Close()
+
+	defer func(file *os.File) {
+		if closeError := file.Close(); closeError != nil {
+			log.Debug("Error closing webpFile:", closeError)
+		}
+	}(webpFile)
 
 	_, err = webpFile.Write(buffer.Bytes())
 	if err != nil {
