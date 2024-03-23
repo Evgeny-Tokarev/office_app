@@ -1,3 +1,5 @@
+github.com/Evgeny-Tokarev/office_app v0.0.0-20240313024823-e4e9a84f48b5 h1:jjYLV0coqB32YT1vugsUs9VzuxrDxZrIrYUcQj7SvKc=
+github.com/Evgeny-Tokarev/office_app v0.0.0-20240313024823-e4e9a84f48b5/go.mod h1:JZcKwGb349WnQ45m/tckw27ZN5ralnUcJXqQXL6dCBs=
 github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da h1:KjTM2ks9d14ZYCvmHS9iAKVt9AyzRSqNU1qabPih5BY=
 github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da/go.mod h1:eHEWzANqSiWQsof+nXEI9bUVUyV6F53Fp89EuCh2EAA=
 github.com/aead/chacha20poly1305 v0.0.0-20170617001512-233f39982aeb h1:6Z/wqhPFZ7y5ksCEV/V5MXOazLaeu/EW97CU5rz8NWk=

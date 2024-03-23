@@ -109,8 +109,7 @@ func (osu *OfficeServiceUnitSuite) TestCreateOffice() {
 func (osu *OfficeServiceUnitSuite) TestDeleteOffice() {
 	osu.querier.EXPECT().GetImagePath(mock.Anything, osu.office.ID).Return(osu.office.ImgFile.String, nil).Times(1)
 	osu.querier.EXPECT().DeleteOffice(mock.Anything, osu.office.ID).Return(nil).Times(1)
-	requestBody := fmt.Sprintf(`{"Name": "%s", "Address": "%s"}`, osu.office.Name, osu.office.Address)
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/offices/%d", osu.server.URL, osu.office.ID), strings.NewReader(requestBody))
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/offices/%d", osu.server.URL, osu.office.ID), nil)
 	if err != nil {
 		osu.FailNowf("Error sending request: ", err.Error())
 	}
@@ -120,6 +119,7 @@ func (osu *OfficeServiceUnitSuite) TestDeleteOffice() {
 	responseBody := recorder.Body.Bytes()
 	var errorResponse util.ErrorResponse
 	err = json.Unmarshal(responseBody, &errorResponse)
+	fmt.Println(errorResponse)
 	if err != nil {
 		osu.FailNowf("Error unmarshalling response: ", err.Error())
 	}

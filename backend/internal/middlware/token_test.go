@@ -189,7 +189,6 @@ func (mus *MiddlewareUnitSuite) TestAuthMiddlware() {
 			},
 		}}
 	for i := range testCases {
-		fmt.Printf("Starting test case %d \n", i)
 		tc := testCases[i]
 		req, err := http.NewRequest("GET", fmt.Sprintf("%s/auth", mus.server.URL), nil)
 		if err != nil {

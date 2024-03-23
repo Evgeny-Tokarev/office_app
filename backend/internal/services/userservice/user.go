@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/user_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/token"
@@ -40,11 +39,11 @@ func New(userRepository user_repository.Querier, cfg config.Config) (*UserServic
 func (us *UserService) SetHandlers(router, authRoutes *mux.Router) {
 	router.HandleFunc("/user", us.Create).Methods(http.MethodPost)
 	router.HandleFunc("/user/login", us.Login).Methods(http.MethodPost)
-	authRoutes.HandleFunc("/offices/{id}", us.Get).Methods(http.MethodGet)
-	router.HandleFunc("/offices", us.List).Methods(http.MethodGet)
-	router.HandleFunc("/offices", us.Update).Methods(http.MethodPut)
-	router.HandleFunc("/offices/{id}", us.Delete).Methods(http.MethodDelete)
-	router.HandleFunc("/offices/{id}/image", us.Upload).Methods(http.MethodPost)
+	authRoutes.HandleFunc("/user/{id}", us.Get).Methods(http.MethodGet)
+	router.HandleFunc("/user", us.List).Methods(http.MethodGet)
+	router.HandleFunc("/user", us.Update).Methods(http.MethodPut)
+	router.HandleFunc("/user/{id}", us.Delete).Methods(http.MethodDelete)
+	router.HandleFunc("/user/{id}/image", us.Upload).Methods(http.MethodPost)
 }
 
 type CreateRequest struct {
@@ -62,7 +61,6 @@ type CreateResponse struct {
 func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 	req := &CreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-		fmt.Println("Fc: ", err.Error())
 		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -71,7 +69,6 @@ func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 		util.SendTranscribedError(w, "all fields are required", http.StatusBadRequest)
 		return
 	}
-
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
@@ -95,7 +92,6 @@ func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 	}
-	fmt.Println("Created user and token", user, t)
 
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(&CreateResponse{
@@ -219,11 +215,10 @@ type GetResponse struct {
 }
 
 func (us *UserService) Get(w http.ResponseWriter, r *http.Request) {
-	owner := r.Context().Value("owner").(string)
-	if util.ReqOwners[owner] < 2 {
-		util.SendTranscribedError(w, "Forbidden: Insufficient privileges", http.StatusForbidden)
+	if !util.HasAccessRights(w, r, "moderator") {
 		return
 	}
+
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -252,11 +247,10 @@ func (us *UserService) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (us *UserService) List(w http.ResponseWriter, r *http.Request) {
-	owner := r.Context().Value("owner").(string)
-	if util.ReqOwners[owner] < 2 {
-		util.SendTranscribedError(w, "Forbidden: Insufficient privileges", http.StatusForbidden)
+	if !util.HasAccessRights(w, r, "moderator") {
 		return
 	}
+
 	list, err := us.userRepository.ListUsers(r.Context())
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
@@ -292,6 +286,10 @@ type UpdateRequest struct {
 }
 
 func (us *UserService) Update(w http.ResponseWriter, r *http.Request) {
+	if !util.HasAccessRights(w, r, "admin") {
+		return
+	}
+
 	req := &UpdateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		if err.Error() == errors.New("EOF").Error() {
@@ -321,6 +319,10 @@ func (us *UserService) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (us *UserService) Delete(w http.ResponseWriter, r *http.Request) {
+	if !util.HasAccessRights(w, r, "admin") {
+		return
+	}
+
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -338,7 +340,7 @@ func (us *UserService) Delete(w http.ResponseWriter, r *http.Request) {
 		if err := os.Remove(imagePath); err != nil {
 			util.WriteResponse(w, http.StatusOK, map[string]interface{}{
 				"Status":  http.StatusOK,
-				"Message": "Office deleted, but image file deletion failed",
+				"Message": "User deleted, but image file deletion failed",
 			})
 		}
 	}
@@ -352,6 +354,10 @@ func (us *UserService) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (us *UserService) Upload(w http.ResponseWriter, r *http.Request) {
+	if !util.HasAccessRights(w, r, "admin") {
+		return
+	}
+
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {

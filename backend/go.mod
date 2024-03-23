@@ -1,6 +1,6 @@
 module github.com/evgeny-tokarev/office_app/backend
 
-go 1.20
+go 1.22
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -19,6 +19,7 @@ require (
 )
 
 require (
+	github.com/Evgeny-Tokarev/office_app v0.0.0-20240313024823-e4e9a84f48b5 // indirect
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/aead/chacha20poly1305 v0.0.0-20170617001512-233f39982aeb // indirect
 	github.com/aead/poly1305 v0.0.0-20180717145839-3fee0db0b635 // indirect
