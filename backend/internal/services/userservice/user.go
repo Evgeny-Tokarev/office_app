@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/user_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/token"
@@ -59,6 +60,7 @@ type CreateResponse struct {
 }
 
 func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("creating...")
 	req := &CreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
@@ -309,7 +311,6 @@ func (us *UserService) Update(w http.ResponseWriter, r *http.Request) {
 		Email: req.Email,
 		Role:  req.Role,
 	}
-
 	if err := us.userRepository.UpdateUser(r.Context(), o); err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 		return

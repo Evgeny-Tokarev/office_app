@@ -10,7 +10,8 @@ import (
 var TestDB *sql.DB
 
 func InitSqlDB(cfg config.Config) (*sql.DB, error) {
-
+	connectionString := FormatConnect(cfg)
+	fmt.Println("Connecting to database with connection string:", connectionString)
 	db, err := sql.Open("pgx", FormatConnect(cfg))
 	if err != nil {
 		return nil, err

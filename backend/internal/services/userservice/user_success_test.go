@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -147,7 +146,7 @@ func (usu *UserServiceUnitSuite) TestUpdateUser() {
 		Email: usu.user.Email,
 		Role:  usu.user.Role,
 	}).Return(nil).Times(1)
-	requestBody := fmt.Sprintf(`{"ID": "%s", "Name": "%s", "Email": "%s", "Role": "%s"}`, strconv.Itoa(int(usu.user.ID)), usu.user.Name, usu.user.Email, usu.user.Role)
+	requestBody := fmt.Sprintf(`{"ID": %d, "Name": "%s", "Email": "%s", "Role": "%s"}`, usu.user.ID, usu.user.Name, usu.user.Email, usu.user.Role)
 
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/user", usu.server.URL), strings.NewReader(requestBody))
 	if err != nil {
@@ -159,7 +158,7 @@ func (usu *UserServiceUnitSuite) TestUpdateUser() {
 	recorder := httptest.NewRecorder()
 	usu.router.ServeHTTP(recorder, req)
 	usu.Assert().NoError(err)
-	usu.Assert().Equal(recorder.Code, http.StatusOK)
+	usu.Assert().Equal(http.StatusOK, recorder.Code)
 }
 
 func CreateRandomUser() (string, user_repository.User, error) {

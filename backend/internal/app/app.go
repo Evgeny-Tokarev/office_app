@@ -63,7 +63,7 @@ func NewApp(config config.Config, tokenType string) (*App, error) {
 }
 
 func (a *App) Run(cfg config.Config) error {
-	log.Info("Config: ", cfg)
+	log.Infof("Starting server on address %s and port %d", cfg.PgHost, cfg.Port)
 	router := mux.NewRouter()
 	authRoutes := router.PathPrefix("/").Subrouter()
 	emplService := employeeservice.New(a.store.EmployeeRepo)

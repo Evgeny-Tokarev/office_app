@@ -13,10 +13,6 @@ import (
 func TokenMiddleware(us *userservice.UserService) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			//if r.Method == http.MethodPost && (r.URL.Path == "/user" || r.URL.Path == "/user/login") {
-			//	next.ServeHTTP(w, r)
-			//	return
-			//}
 			fields := strings.Fields(r.Header.Get("Authorization"))
 			if len(fields) < 2 {
 				util.SendTranscribedError(w, "invalid authorization header", http.StatusUnauthorized)
@@ -28,6 +24,7 @@ func TokenMiddleware(us *userservice.UserService) mux.MiddlewareFunc {
 				util.SendTranscribedError(w, fmt.Sprintf("unsupported authorization type %s", authorizationType), http.StatusUnauthorized)
 				return
 			}
+			fmt.Println("token: ", fields[1], r)
 			payload, err := us.TokenMaker.VerifyToken(fields[1])
 			if err != nil {
 				util.SendTranscribedError(w, err.Error(), http.StatusUnauthorized)

@@ -45,10 +45,11 @@ func setupTestServer(mus *MiddlewareUnitSuite) {
 	userService, err := userservice.New(querierMock, cfg)
 	require.NoError(mus.T(), err)
 	mus.router = mux.NewRouter()
-	userService.SetHandlers(mus.router, mus.router)
-	mus.router.Use(TokenMiddleware(userService))
+	authRoutes := mus.router.PathPrefix("/").Subrouter()
+	userService.SetHandlers(mus.router, authRoutes)
+	authRoutes.Use(TokenMiddleware(userService))
 	mus.tokenMaker = userService.TokenMaker
-	mus.router.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) {
+	authRoutes.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}).Methods(http.MethodGet)
 	mus.querier = querierMock
@@ -65,6 +66,7 @@ func (mus *MiddlewareUnitSuite) SetupTest() {
 	mus.password, mus.user, err = CreateRandomUser()
 	require.NoError(mus.T(), err)
 	mus.querier.EXPECT().CreateUser(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, params user_repository.CreateUserParams) (user_repository.User, error) {
+		fmt.Println("checking...")
 		err := util.CheckPassword(mus.password, params.HashedPassword)
 		if err != nil {
 			return user_repository.User{}, err
@@ -126,7 +128,7 @@ func (mus *MiddlewareUnitSuite) TestAuthMiddlware() {
 		},
 		checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 			status := recorder.Result().StatusCode
-			require.Equal(t, status, http.StatusOK)
+			require.Equal(t, http.StatusOK, status)
 		},
 	},
 		{
