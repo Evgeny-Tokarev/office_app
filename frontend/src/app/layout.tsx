@@ -7,13 +7,9 @@ import ThemeRegistry from "@/app/registry"
 import Navbar from "@/components/Navbar"
 import Loader from "@/components/Loader"
 import {Paper} from "@mui/material"
-import {
-    ModalContextProvider
-} from "@/components/ModalProvider"
+import {ModalContextProvider} from "@/components/ModalProvider"
 import Modal from "@/components/modal/Modal"
-import {
-    LoaderContextProvider
-} from "@/components/LoaderProvider"
+import {LoaderContextProvider} from "@/components/LoaderProvider"
 
 const lato = Lato({
     weight: ['400', '700'],
@@ -45,17 +41,17 @@ export default function RootLayout({
                         <LoaderContextProvider>
                             <Modal/>
                             <Navbar/>
-                            <Loader />
+                            <Loader/>
                             <div className="flex flex-col justify-between items-stretch flex-1">
 
                                 <Paper
-                                    sx={{
-                                        flexGrow: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column'
-                                    }}>
-                            {children}
-                                    </Paper>
+                            sx={{
+                                flexGrow: 1,
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }}>
+                                    {children}
+                                </Paper>
                             </div>
                         </LoaderContextProvider>
                     </ModalContextProvider>

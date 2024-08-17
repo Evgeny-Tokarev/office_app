@@ -12,7 +12,7 @@ var makerMap = map[string]func(secret string) (Maker, error){
 }
 
 type Maker interface {
-	CreateToken(username, role string, duration time.Duration) (string, error)
+	CreateToken(id int64, role string, duration time.Duration) (string, error)
 	VerifyToken(token string) (*Payload, error)
 }
 

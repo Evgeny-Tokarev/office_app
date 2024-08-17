@@ -1,5 +1,6 @@
-export { type Office } from './office'
-export { type Employee } from './employee'
+export {type Office} from './office'
+export {type Employee} from './employee'
 export {type ModalContextType, type ModalProps, type ModalType} from './modal'
 export {type StyleObj} from './style'
 export {type RestApiResponse, type ErrorResponse} from './response'
+export {type User} from './user'

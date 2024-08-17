@@ -1,21 +1,13 @@
-import {
-    Box, Button, TextField, Input, InputLabel
-} from "@mui/material"
-import * as React from "react";
-import {
-    createOffice,
-    fetchOffices,
-    OfficesState,
-    updateOffice,
-    saveImage
-} from "@/app/redux/features/officesSlice";
-import {ModalType, Office} from "@/app/models";
-import {ModalContext} from "@/components/ModalProvider";
-import {useDispatch, useSelector} from "react-redux";
-import {ThunkDispatch} from "@reduxjs/toolkit";
-import {AnyAction} from "redux";
-import {RootState} from "@/app/redux/store";
-import {useTheme as useNextTheme} from "next-themes";
+import {Box, Button, Input, InputLabel, TextField} from "@mui/material"
+import * as React from "react"
+import {createOffice, fetchOffices, OfficesState, saveImage, updateOffice} from "@/app/redux/features/officesSlice"
+import {Office} from "@/app/models"
+import {ModalContext} from "@/components/ModalProvider"
+import {useDispatch, useSelector} from "react-redux"
+import {ThunkDispatch} from "@reduxjs/toolkit"
+import {AnyAction} from "redux"
+import {RootState} from "@/app/redux/store"
+import {useTheme as useNextTheme} from "next-themes"
 
 
 export const style = {
@@ -178,7 +170,9 @@ export default function OfficeForm({onCloseModal}: {
                     alt="Office image"
                     loading="lazy">
                 </img>
-                <Input type="file" sx={style.fileInput}
+                <Input
+type="file"
+sx={style.fileInput}
                        onChange={uploadImageFile}/>
             </InputLabel>
         </div>

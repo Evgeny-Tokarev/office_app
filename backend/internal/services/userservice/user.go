@@ -38,9 +38,10 @@ func New(userRepository user_repository.Querier, cfg config.Config) (*UserServic
 }
 
 func (us *UserService) SetHandlers(router, authRoutes *mux.Router) {
+	authRoutes.HandleFunc("/user/current", us.GetCurrent).Methods(http.MethodGet)
+	authRoutes.HandleFunc("/user/{id}", us.Get).Methods(http.MethodGet)
 	router.HandleFunc("/user", us.Create).Methods(http.MethodPost)
 	router.HandleFunc("/user/login", us.Login).Methods(http.MethodPost)
-	authRoutes.HandleFunc("/user/{id}", us.Get).Methods(http.MethodGet)
 	router.HandleFunc("/user", us.List).Methods(http.MethodGet)
 	router.HandleFunc("/user", us.Update).Methods(http.MethodPut)
 	router.HandleFunc("/user/{id}", us.Delete).Methods(http.MethodDelete)
@@ -60,7 +61,6 @@ type CreateResponse struct {
 }
 
 func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("creating...")
 	req := &CreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
@@ -90,7 +90,7 @@ func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := us.TokenMaker.CreateToken(user.Name, user.Role, time.Hour)
+	t, err := us.TokenMaker.CreateToken(user.ID, user.Role, time.Hour*24)
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -144,6 +144,7 @@ func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
 		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	if req.Name == "" || req.Email == "" || req.Password == "" {
 		util.SendTranscribedError(w, "all fields are required", http.StatusBadRequest)
 		return
@@ -151,7 +152,7 @@ func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
 
 	user1, err := us.userRepository.GetUserByName(r.Context(), req.Name)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			util.SendTranscribedError(w, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -161,7 +162,7 @@ func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
 
 	user2, err := us.userRepository.GetUserByEmail(r.Context(), req.Email)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			util.SendTranscribedError(w, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -180,7 +181,7 @@ func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := us.TokenMaker.CreateToken(user1.Name, user1.Role, time.Hour)
+	t, err := us.TokenMaker.CreateToken(user1.ID, user1.Role, time.Hour*24)
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
@@ -205,18 +206,18 @@ func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
 
 }
 
-type GetResponse struct {
+type GetUserResponse struct {
 	ID                int64  `json:"id"`
 	Name              string `json:"name"`
 	Email             string `json:"email"`
 	Role              string `json:"role"`
-	HashedPassword    string `json:"hashed_password"`
 	PasswordChangedAt string `json:"password_changed_at"`
 	CreatedAt         string `json:"created_at"`
 	ImgFile           string `json:"img_file"`
 }
 
 func (us *UserService) Get(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("in Get")
 	if !util.HasAccessRights(w, r, "moderator") {
 		return
 	}
@@ -236,16 +237,42 @@ func (us *UserService) Get(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(&GetResponse{
+	_ = json.NewEncoder(w).Encode(&GetUserResponse{
 		ID:                u.ID,
 		Name:              u.Name,
 		Email:             u.Email,
 		Role:              u.Role,
-		HashedPassword:    u.HashedPassword,
 		PasswordChangedAt: u.PasswordChangedAt.Format(util.TimeLayout),
 		CreatedAt:         u.CreatedAt.Format(util.TimeLayout),
 		ImgFile:           u.ImgFile.String,
 	})
+}
+
+func (us *UserService) GetCurrent(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("in GetCurrent")
+	userId := r.Context().Value("userId").(int64)
+
+	u, err := us.userRepository.GetUserById(r.Context(), userId)
+	if err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if err = json.NewEncoder(w).Encode(&GetUserResponse{
+		ID:                u.ID,
+		Name:              u.Name,
+		Email:             u.Email,
+		Role:              u.Role,
+		PasswordChangedAt: u.PasswordChangedAt.Format(util.TimeLayout),
+		CreatedAt:         u.CreatedAt.Format(util.TimeLayout),
+		ImgFile:           u.ImgFile.String,
+	}); err != nil {
+		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func (us *UserService) List(w http.ResponseWriter, r *http.Request) {
@@ -258,14 +285,13 @@ func (us *UserService) List(w http.ResponseWriter, r *http.Request) {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	response := make([]GetResponse, 0, len(list))
+	response := make([]GetUserResponse, 0, len(list))
 	for _, e := range list {
-		response = append(response, GetResponse{
+		response = append(response, GetUserResponse{
 			ID:                e.ID,
 			Name:              e.Name,
 			Email:             e.Email,
 			Role:              e.Role,
-			HashedPassword:    e.HashedPassword,
 			PasswordChangedAt: e.PasswordChangedAt.Format(util.TimeLayout),
 			CreatedAt:         e.CreatedAt.Format(util.TimeLayout),
 			ImgFile:           e.ImgFile.String,

@@ -5,6 +5,7 @@ export type ModalType =
     | 'office_form'
     | 'warn'
     | 'employee_form'
+    | 'user_form'
 
 export interface ModalContextType {
     openModal: boolean;
@@ -19,9 +20,10 @@ export interface ModalProps {
     title?: string,
     isPermanent?: boolean,
     withActions?: boolean,
-    style?: { [name: string]: string },
+    style?: { [name: string]: string | number },
     actionCallback?: (props?: any) => void | Promise<void>
     delay?: number,
+    closable?: boolean,
     formProps?: {
         id: number, office_id?: number
     }

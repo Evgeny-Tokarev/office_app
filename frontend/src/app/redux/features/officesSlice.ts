@@ -1,8 +1,6 @@
 "use client"
 
-import {
-    createAsyncThunk, createSlice, type SerializedError
-} from "@reduxjs/toolkit"
+import {createAsyncThunk, createSlice, type SerializedError} from "@reduxjs/toolkit"
 import {type Office} from '@/app/models'
 import api from "@/app/api"
 
@@ -53,7 +51,7 @@ export const fetchOffice = createAsyncThunk<Office, number, {
         return rejectWithValue(err as SerializedError)
     }
 })
-export const saveImage = createAsyncThunk<boolean, {id: number, image: File}, {
+export const saveImage = createAsyncThunk<boolean, { id: number, image: File }, {
     rejectValue: SerializedError;
 }>('offices/saveImage', async ({id, image}, {rejectWithValue}) => {
     try {
@@ -128,8 +126,10 @@ export const offices = createSlice({
             .addCase(fetchOffices.rejected, (state, action) => {
                 state.loading = false
                 state.offices = []
-                state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
-                    code: action.payload?.code || action.error.code || 'Error'}
+                state.error = {
+                    message: action.payload?.message || action.error.message || 'Unknown error occurred',
+                    code: action.payload?.code || action.error.code || 'Error'
+                }
             }).addCase(fetchOffice.pending, state => {
             state.loading = true
             state.error = null
@@ -142,8 +142,10 @@ export const offices = createSlice({
             .addCase(fetchOffice.rejected, (state, action) => {
                 state.loading = false
                 state.currentOffice = null
-                state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
-                    code: action.payload?.code || action.error.code || 'Error'}
+                state.error = {
+                    message: action.payload?.message || action.error.message || 'Unknown error occurred',
+                    code: action.payload?.code || action.error.code || 'Error'
+                }
             })
             .addCase(updateOffice.pending, state => {
                 state.loading = true
@@ -154,8 +156,10 @@ export const offices = createSlice({
                 state.error = null
             }).addCase(updateOffice.rejected, (state, action) => {
             state.loading = false
-            state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
-                code: action.payload?.code || action.error.code || 'Error'}
+            state.error = {
+                message: action.payload?.message || action.error.message || 'Unknown error occurred',
+                code: action.payload?.code || action.error.code || 'Error'
+            }
         }).addCase(createOffice.pending, state => {
             state.loading = true
             state.infoState = null
@@ -171,8 +175,10 @@ export const offices = createSlice({
             }).addCase(createOffice.rejected, (state, action) => {
             state.loading = false
             state.infoState = null
-            state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
-                code: action.payload?.code || action.error.code || 'Error'}
+            state.error = {
+                message: action.payload?.message || action.error.message || 'Unknown error occurred',
+                code: action.payload?.code || action.error.code || 'Error'
+            }
         }).addCase(deleteOffice.pending, state => {
             state.loading = true
             state.error = null
@@ -188,8 +194,10 @@ export const offices = createSlice({
             }).addCase(deleteOffice.rejected, (state, action) => {
             state.loading = false
             state.infoState = null
-            state.error = {message: action.payload?.message || action.error.message || 'Unknown error occurred',
-                code: action.payload?.code || action.error.code || 'Error'}
+            state.error = {
+                message: action.payload?.message || action.error.message || 'Unknown error occurred',
+                code: action.payload?.code || action.error.code || 'Error'
+            }
         })
     },
 })

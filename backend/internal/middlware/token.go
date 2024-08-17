@@ -24,7 +24,7 @@ func TokenMiddleware(us *userservice.UserService) mux.MiddlewareFunc {
 				util.SendTranscribedError(w, fmt.Sprintf("unsupported authorization type %s", authorizationType), http.StatusUnauthorized)
 				return
 			}
-			fmt.Println("token: ", fields[1], r)
+
 			payload, err := us.TokenMaker.VerifyToken(fields[1])
 			if err != nil {
 				util.SendTranscribedError(w, err.Error(), http.StatusUnauthorized)
@@ -32,6 +32,7 @@ func TokenMiddleware(us *userservice.UserService) mux.MiddlewareFunc {
 			}
 
 			ctx := context.WithValue(r.Context(), "owner", payload.Role)
+			ctx = context.WithValue(ctx, "userId", payload.UserID)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

@@ -40,7 +40,7 @@ func InitTestDB() (*sql.DB, error) {
 		log.Fatalf("failed to retrieve env variables for test, %v", err)
 	}
 	log.Debug("Config for test DB: ", cfg)
-	testDB, err = sql.Open("pgx", bootstrap.FormatConnect(cfg))
+	testDB, err = sql.Open("pgx", bootstrap.FormatConnectForSql(cfg))
 	if err != nil {
 		return nil, err
 	}
