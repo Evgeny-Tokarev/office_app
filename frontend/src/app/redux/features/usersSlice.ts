@@ -75,7 +75,6 @@ export const getCurrentUser = createAsyncThunk<User, string, {
 }>('users/getCurrentUser', async (token, {rejectWithValue}) => {
     try {
         const response = await api.usersApi.getCurrentUser(token)
-        console.log(response.data)
         if (response.data?.status === 200) return response.data.data
         return rejectWithValue({
             code: response.error?.code,
@@ -140,7 +139,6 @@ export const users = createSlice({
                 state.error = null
             })
             .addCase(getCurrentUser.fulfilled, (state, action) => {
-                console.log("setting current user", action.payload)
                 state.loading = false
                 state.currentUser = action.payload
                 state.error = null

@@ -23,6 +23,24 @@ const style: StyleObj = {
     modal: {...initialStyleProps}
 }
 
+const loginModalProps: ModalProps = {
+    isPermanent: true,
+    type: 'user_form',
+    title: 'Please Log In',
+    text: 'You need to log in to access the content.',
+    closable: false,
+    style: {
+        top: '0',
+        left: '0',
+        right: '0',
+        bottom: '0',
+        width: '100%',
+        height: '100%',
+        transform: 'none',
+        bgcolor: 'white'
+    }
+}
+
 
 export default function BasicModal() {
     const {
@@ -83,27 +101,10 @@ export default function BasicModal() {
     }, [])
 
     useEffect(() => {
-        console.log(currentUser)
         if (!currentUser) {
             console.log("Open cause no user")
             setOpenModal(true)
-            setModalProps({
-                isPermanent: true,
-                type: 'user_form',
-                title: 'Please Log In',
-                text: 'You need to log in to access the content.',
-                closable: false,
-                style: {
-                    top: '0',
-                    left: '0',
-                    right: '0',
-                    bottom: '0',
-                    width: '100%',
-                    height: '100%',
-                    transform: 'none',
-                    bgcolor: 'white'
-                }
-            })
+            setModalProps(loginModalProps)
         } else closeModal()
 
     }, [currentUser])
@@ -117,7 +118,6 @@ export default function BasicModal() {
         if (modalProps.style && Object.keys(modalProps.style).length > 0) {
             style.modal = {...style.modal, ...modalProps.style}
         }
-        console.log(style.modal)
         if (!modalProps.isPermanent && openModal) {
             setTimeout(() => {
                 closeModal()

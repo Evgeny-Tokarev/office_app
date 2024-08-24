@@ -14,6 +14,16 @@ axios.interceptors.request.use(config => {
         console.groupEnd()
     }
 
+    if (!config.headers?.noToken) {
+        const token = localStorage.getItem('officeAppToken')
+
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`
+        }
+    }
+
+    delete config.headers?.noToken
+
     return config
 }, error => error)
 

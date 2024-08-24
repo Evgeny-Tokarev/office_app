@@ -5,18 +5,19 @@ import {useTheme} from "next-themes"
 const label = {inputProps: {'aria-label': 'Theme switcher'}}
 
 export default function ThemeSwitcher() {
-    const [checked, setChecked] = React.useState(true);
+    const [checked, setChecked] = React.useState(true)
     const {theme, setTheme} = useTheme()
     const [mounted, setMounted] = React.useState(false)
 
     React.useEffect(() => {
+        console.log("Theme: ", theme)
         setMounted(true)
         setChecked(theme === 'dark')
     }, [])
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked)
-        setTheme(event.target.checked ? 'dark' : 'light');
-    };
+        setTheme(event.target.checked ? 'dark' : 'light')
+    }
 
     if (!mounted) {
         return null
