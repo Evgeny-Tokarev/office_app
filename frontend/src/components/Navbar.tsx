@@ -1,18 +1,11 @@
 "use client"
 
-import {
-    AppBar,
-    Box,
-    Toolbar,
-    IconButton,
-    Typography,
-    Menu,
-    MenuItem,
-} from '@mui/material'
+import {AppBar, Box, IconButton, Menu, MenuItem, Toolbar, Typography,} from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import React from "react"
 import ThemeSwitcher from "@/components/ThemeSwitcher"
 import {useRouter} from 'next/navigation'
+import LogoutButton from "@/components/LogoutButton"
 
 const menuItems = [{
     name: 'dashboard', route: '/'
@@ -61,8 +54,8 @@ export default function Navbar() {
                         className="flex justify-between items-center">
                         <MenuIcon sx={{mb: 0.5, mr: 1}}/>
                         <Typography
-                            variant="h6"
-                            component="div"
+                            variant="h3"
+                            component="p"
                             sx={{flexGrow: 1}}
                         >
                             Menu
@@ -86,6 +79,7 @@ export default function Navbar() {
                     </MenuItem>))}
                 </Menu>
                 <ThemeSwitcher/>
+                <LogoutButton/>
             </Toolbar>
         </AppBar>
     </Box>)

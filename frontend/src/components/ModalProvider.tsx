@@ -12,6 +12,8 @@ export const initialStyleProps = {
     minWidth: '50%',
     width: 'auto',
     height: 'auto',
+    maxWidth: '100%',
+    maxHeight: '100%',
     borderRadius: '0.5rem',
     boxShadow: 24,
     overflow: 'hidden',
@@ -28,6 +30,7 @@ export const initialProps = {
     isPermanent: false,
     withActions: false,
     delay: 4000,
+    closable: true,
     style: {...initialStyleProps}
 } as ModalProps
 export const ModalContext = createContext<ModalContextType>({

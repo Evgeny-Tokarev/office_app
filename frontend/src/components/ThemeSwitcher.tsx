@@ -23,7 +23,7 @@ export default function ThemeSwitcher() {
         return null
     }
     return (<div
-        className="flex justify-between items-center">
+        className="flex justify-between items-center ml-auto">
         <Icon>light_mode</Icon>
         <Switch
             {...label}

@@ -74,7 +74,6 @@ export default function BasicModal() {
 
     React.useEffect(() => {
         if (error && !openModal) {
-            console.log("Open cause error", initialStyleProps)
             setInitialModalOpenState(openModal)
             setInitialModalProps({...modalProps})
             setModalProps({
@@ -102,7 +101,6 @@ export default function BasicModal() {
 
     useEffect(() => {
         if (!currentUser) {
-            console.log("Open cause no user")
             setOpenModal(true)
             setModalProps(loginModalProps)
         } else closeModal()
@@ -138,6 +136,7 @@ export default function BasicModal() {
         setInitialModalProps({...initialProps})
     }
     return mounted ? createPortal(<Modal
+            sx={{"position": "absolute"}}
             open={openModal ?? false}
             onClose={(_, reason) => checkReasonAndClose(reason)}
             aria-labelledby="modal-modal-title"
@@ -151,7 +150,7 @@ export default function BasicModal() {
                     size="large"
                     edge="start"
                     color="inherit"
-                    aria-label="menu"
+                    aria-label="close modal"
                     sx={{ml: 'auto', display: modalProps.closable ? '' : 'none'}}
                     onClick={closeModal}
                 >

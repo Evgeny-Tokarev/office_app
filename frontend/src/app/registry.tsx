@@ -4,15 +4,10 @@ import React, {useEffect} from 'react'
 import {useServerInsertedHTML} from 'next/navigation'
 import createCache, {type Options} from '@emotion/cache'
 import {CacheProvider} from '@emotion/react'
-import {
-    ThemeProvider as MuiThemeProvider, THEME_ID
-} from '@mui/material/styles'
-import {lightTheme, darkTheme} from "@/app/themes/themes"
-import {
-    ThemeProvider as NextThemeProvider,
-    useTheme as useNextTheme
-} from "next-themes"
-import {CssBaseline} from "@mui/material";
+import {THEME_ID, ThemeProvider as MuiThemeProvider} from '@mui/material/styles'
+import {darkTheme, lightTheme} from "@/app/themes/themes"
+import {ThemeProvider as NextThemeProvider, useTheme as useNextTheme} from "next-themes"
+import {CssBaseline} from "@mui/material"
 
 export default function ThemeRegistry(props: {
     children: React.ReactNode, options: Options
@@ -71,22 +66,40 @@ function MTP({
              }: {
     children: React.ReactNode
 }) {
-    const {theme} = useNextTheme()
+    // this part uses autodetection for the system(browser?) theme
+    // const {theme} = useNextTheme()
+    // const [mounted, setMounted] = React.useState(false)
+    // const [mTheme, setMTheme] = React.useState(theme === 'light' || theme === '' ? lightTheme : darkTheme)
+    // useEffect(() => {
+    //     setMTheme(theme === 'light' || theme === '' ? lightTheme : darkTheme)
+    //     setMounted(true)
+    // }, [])
+    //
+    // useEffect(() => {
+    //     setMTheme(theme === 'light' || theme === '' ? lightTheme : darkTheme)
+    // }, [theme])
+    // if (!mounted) return null
+    // return (<MuiThemeProvider
+    //     theme={{ [THEME_ID]: mTheme }}>
+    //     <CssBaseline/>
+    //     {children}
+    // </MuiThemeProvider>)
+
+    const {resolvedTheme} = useNextTheme()
     const [mounted, setMounted] = React.useState(false)
-    const [mTheme, setMTheme] = React.useState(theme === 'light' || theme === '' ? lightTheme : darkTheme)
+
     useEffect(() => {
-        setMTheme(theme === 'light' || theme === '' ? lightTheme : darkTheme)
         setMounted(true)
     }, [])
 
-    useEffect(() => {
-        setMTheme(theme === 'light' || theme === '' ? lightTheme : darkTheme)
-    }, [theme])
-    if (!mounted) return null
-    return (<MuiThemeProvider
-        theme={{ [THEME_ID]: mTheme }}>
-        <CssBaseline/>
-        {children}
-    </MuiThemeProvider>)
+    const selectedTheme = resolvedTheme === 'dark' ? darkTheme : lightTheme
 
+    if (!mounted) return null
+
+    return (
+        <MuiThemeProvider theme={{[THEME_ID]: selectedTheme}}>
+            <CssBaseline/>
+            {children}
+        </MuiThemeProvider>
+    )
 }

@@ -17,6 +17,7 @@ export const style = {
             m: 1
         },
         width: '100%',
+        maxWidth: '30rem',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center'
@@ -101,7 +102,7 @@ export default function UserForm({onCloseModal}: {
                 value={name}
                 fullWidth
                 inputRef={titleInput}
-                helperText={nameInputError ? 'Name should have at least 3 characters' : ''}
+                helperText={nameInputError ? 'Name should have at least 3 characters' : ' '}
                 onChange={(e) => onNameInputChange(e)}
             />
             <TextField
@@ -112,7 +113,7 @@ export default function UserForm({onCloseModal}: {
                 multiline
                 fullWidth
                 maxRows={4}
-                helperText={emailInputError ? 'Address should have at least 3 characters' : ''}
+                helperText={emailInputError ? 'Address should have at least 3 characters' : ' '}
                 onChange={(e) => onEmailInputChange(e)}
             />
             <TextField
@@ -123,7 +124,7 @@ export default function UserForm({onCloseModal}: {
                 multiline
                 fullWidth
                 maxRows={4}
-                helperText={emailInputError ? 'Password should have at least 3 characters' : ''}
+                helperText={emailInputError ? 'Password should have at least 3 characters' : ' '}
                 onChange={(e) => onPasswordInputChange(e)}
             />
 

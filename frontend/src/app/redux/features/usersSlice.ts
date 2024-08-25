@@ -40,41 +40,13 @@ export const login = createAsyncThunk<{ user: User, token: string }, {
         return rejectWithValue(err as SerializedError)
     }
 })
-// export const createUser = createAsyncThunk<User, number, {
-//     rejectValue: SerializedError;
-// }>('offices/fetchOffice', async (id, {rejectWithValue}) => {
-//     try {
-//         const response = await api.officesApi.getOffice(id)
-//         if (response.data?.status === 200) return response.data.data
-//         return rejectWithValue({
-//             code: response.error?.code,
-//             message: response.error?.message
-//         } as SerializedError)
-//     } catch (err) {
-//         return rejectWithValue(err as SerializedError)
-//     }
-// })
-// export const saveImage = createAsyncThunk<boolean, { id: number, image: File }, {
-//     rejectValue: SerializedError;
-// }>('offices/saveImage', async ({id, image}, {rejectWithValue}) => {
-//     try {
-//         const response = await api.officesApi.saveImage(id, image)
-//         if (response.data?.status === 200) return response.data.data
-//         return rejectWithValue({
-//             code: response.error?.code,
-//             message: response.error?.message
-//         } as SerializedError)
-//     } catch (err) {
-//         return rejectWithValue(err as SerializedError)
-//     }
-// })
-//
-//
+
 export const getCurrentUser = createAsyncThunk<User, string, {
     rejectValue: SerializedError;
 }>('users/getCurrentUser', async (token, {rejectWithValue}) => {
     try {
         const response = await api.usersApi.getCurrentUser(token)
+        console.log(response.data)
         if (response.data?.status === 200) return response.data.data
         return rejectWithValue({
             code: response.error?.code,
@@ -84,37 +56,15 @@ export const getCurrentUser = createAsyncThunk<User, string, {
         return rejectWithValue(err as SerializedError)
     }
 })
-// export const deleteOffice = createAsyncThunk<void, number, {
-//     rejectValue: SerializedError;
-// }>('offices/deleteOffice', async (id, {rejectWithValue}) => {
-//     try {
-//         const response = await api.officesApi.deleteOffice(id)
-//         if (response.data?.status === 200) return
-//         return rejectWithValue({
-//             code: response.error?.code,
-//             message: response.error?.message
-//         } as SerializedError)
-//     } catch (err) {
-//         return rejectWithValue(err as SerializedError)
-//     }
-// })
-//
-// export const createOffice = createAsyncThunk<Office, Office, {
-//     rejectValue: SerializedError;
-// }>('offices/createOffice', async (office, {rejectWithValue}) => {
-//     try {
-//         const response = await api.officesApi.createOffice(office)
-//         if (response.data?.status && Math.floor(response.data.status / 100) === 2) return response.data.data
-//         return rejectWithValue({
-//             code: response.error?.code,
-//             message: response.error?.message
-//         } as SerializedError)
-//     } catch (err) {
-//         return rejectWithValue(err as SerializedError)
-//     }
-// })
+
 export const users = createSlice({
-    name: "users", initialState, reducers: {}, extraReducers: builder => {
+    name: "users", initialState, reducers: {
+        logOut: (state) => {
+            state.currentUser = null
+            state.error = null
+            localStorage.removeItem('officeAppToken')
+        },
+    }, extraReducers: builder => {
         builder
             .addCase(login.pending, state => {
                 state.loading = true
@@ -156,3 +106,4 @@ export const users = createSlice({
 })
 
 export default users.reducer
+export const {logOut} = users.actions
