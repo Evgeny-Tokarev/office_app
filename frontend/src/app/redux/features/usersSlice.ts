@@ -1,8 +1,10 @@
 "use client"
 
-import {createAsyncThunk, createSlice, type SerializedError} from "@reduxjs/toolkit"
+import {createAsyncThunk, createSlice, type SerializedError, ThunkDispatch} from "@reduxjs/toolkit"
 import {type User} from '@/app/models'
+import {setError, type ErrorSatate, clearError} from "@/app/redux/features/errorSlice"
 import api from "@/app/api"
+import type { AppDispatch, RootState } from "@/app/redux/store"
 
 export type UserState = {
     currentUser: User | null,
@@ -27,11 +29,14 @@ export const login = createAsyncThunk<{ user: User, token: string }, {
     email: string,
     password: string
 }, {
-    rejectValue: SerializedError;
-}>('users/login', async ({userName, email, password}, {rejectWithValue}) => {
+    rejectValue: SerializedError; dispatch: AppDispatch
+}>('users/login', async ({userName, email, password}, {dispatch, rejectWithValue}) => {
     try {
         const response = await api.usersApi.login(userName, email, password)
-        if (response.data?.status === 200) return response.data.data
+        if (response.data?.status === 200) {
+            dispatch(clearError())
+            return response.data.data
+        }
         return rejectWithValue({
             code: response.error?.code,
             message: response.error?.message
@@ -61,45 +66,33 @@ export const users = createSlice({
     name: "users", initialState, reducers: {
         logOut: (state) => {
             state.currentUser = null
-            state.error = null
             localStorage.removeItem('officeAppToken')
         },
     }, extraReducers: builder => {
         builder
             .addCase(login.pending, state => {
                 state.loading = true
-                state.error = null
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.loading = false
                 state.currentUser = action.payload.user
                 localStorage.setItem('officeAppToken', action.payload.token)
-                state.error = null
             })
             .addCase(login.rejected, (state, action) => {
+                console.log("login rejected")
                 state.loading = false
                 state.currentUser = null
-                state.error = {
-                    message: action.payload?.message || action.error.message || 'Unknown error occurred',
-                    code: action.payload?.code || action.error.code || 'Error'
-                }
             })
             .addCase(getCurrentUser.pending, state => {
                 state.loading = true
-                state.error = null
             })
             .addCase(getCurrentUser.fulfilled, (state, action) => {
                 state.loading = false
                 state.currentUser = action.payload
-                state.error = null
             })
             .addCase(getCurrentUser.rejected, (state, action) => {
                 state.loading = false
                 state.currentUser = null
-                state.error = {
-                    message: action.payload?.message || action.error.message || 'Unknown error occurred',
-                    code: action.payload?.code || action.error.code || 'Error'
-                }
             })
 
     },

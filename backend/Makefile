@@ -12,7 +12,7 @@ migrate-up1:
 	sql-migrate up --env="local" -limit=1
 
 migrate-down:
-	sql-migrate down --env="local"
+	sql-migrate down --env="local"go install github.com/rubenv/sql-migrate/...@latest
 
 migrate-down1:
 	sql-migrate down --env="local" -limit=1

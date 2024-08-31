@@ -2,7 +2,7 @@ import Axios from 'axios'
 import Logger from "@/app/helpers/logger"
 
 const axios = Axios.create({
-    baseURL: 'http://office.local:8000'
+    baseURL: 'api/'
 })
 axios.interceptors.request.use(config => {
     if (Logger.isDebugMode()) {

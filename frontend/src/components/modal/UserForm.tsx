@@ -69,8 +69,6 @@ export default function UserForm({onCloseModal}: {
             return
         }
         await dispatch(login({userName: name, email: email, password: password}))
-        onCloseModal()
-
     }
     const onNameInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setName(e.target.value)

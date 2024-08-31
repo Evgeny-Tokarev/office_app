@@ -73,7 +73,8 @@ export default function BasicModal() {
 
 
     React.useEffect(() => {
-        if (error && !openModal) {
+        console.log("error: ", error)
+        if (error) {
             setInitialModalOpenState(openModal)
             setInitialModalProps({...modalProps})
             setModalProps({
