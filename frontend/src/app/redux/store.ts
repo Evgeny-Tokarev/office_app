@@ -2,15 +2,13 @@ import {combineReducers, configureStore} from "@reduxjs/toolkit"
 import officesSlice from "@/app/redux/features/officesSlice"
 import employeeSlice from "@/app/redux/features/employeeSlice"
 import usersSlice from "@/app/redux/features/usersSlice"
-import loadingSlice from "@/app/redux/features/loadingSlice"
-import errorSlice from "@/app/redux/features/errorSlice"
+import utilsSlice from "@/app/redux/features/utilsSlice"
 
 const rootReducer = combineReducers({
     offices: officesSlice,
     employees: employeeSlice,
     users: usersSlice,
-    errors: errorSlice,
-    loading: loadingSlice,
+    utils: utilsSlice,
 })
 export const store = configureStore({
     reducer: rootReducer,

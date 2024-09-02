@@ -9,7 +9,8 @@ import Loader from "@/components/Loader"
 import {Paper} from "@mui/material"
 import {ModalContextProvider} from "@/components/ModalProvider"
 import Modal from "@/components/modal/Modal"
-import {LoaderContextProvider} from "@/components/LoaderProvider"
+import {LoaderContextProvider} from "@/components/LoginProvider"
+import RequireAuth from "@/components/RequireAuth"
 
 const lato = Lato({
     weight: ['400', '700'],
@@ -21,7 +22,6 @@ const lato = Lato({
 export const metadata: Metadata = {
     title: 'Dashboard', description: 'Test dashboard',
 }
-
 
 export default function RootLayout({
                                        children,
@@ -40,19 +40,21 @@ export default function RootLayout({
                     <ModalContextProvider>
                         <LoaderContextProvider>
                             <Modal/>
-                            <Navbar/>
                             <Loader/>
-                            <div className="flex flex-col justify-between items-stretch flex-1">
+                            <RequireAuth>
+                                <Navbar/>
+                                <div className="flex flex-col justify-between items-stretch flex-1">
 
-                                <Paper
-                            sx={{
-                                flexGrow: 1,
-                                display: 'flex',
-                                flexDirection: 'column'
-                            }}>
-                                    {children}
-                                </Paper>
-                            </div>
+                                    <Paper
+                                sx={{
+                                    flexGrow: 1,
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                }}>
+                                        {children}
+                                    </Paper>
+                                </div>
+                            </RequireAuth>
                         </LoaderContextProvider>
                     </ModalContextProvider>
                 </ThemeRegistry>

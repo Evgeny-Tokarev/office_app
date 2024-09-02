@@ -4,6 +4,7 @@ import {ModalContextType, ModalProps} from "@/app/models"
 
 export const initialStyleProps = {
     position: 'absolute',
+    color: 'black',
     top: '50%',
     left: '50%',
     bottom: 'auto',
@@ -25,8 +26,8 @@ export const initialStyleProps = {
 
 export const initialProps = {
     type: 'info',
-    text: '',
-    title: '',
+    text: 'Initial text',
+    title: 'Initial title',
     isPermanent: false,
     withActions: false,
     delay: 4000,

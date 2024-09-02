@@ -1,12 +1,12 @@
-import {Box, Button, TextField} from "@mui/material"
+"use client"
+
 import * as React from "react"
-import {login, UserState} from "@/app/redux/features/usersSlice"
-import {User} from "@/app/models"
-import {ModalContext} from "@/components/ModalProvider"
 import {useDispatch} from "react-redux"
-import {ThunkDispatch} from "@reduxjs/toolkit"
-import {AnyAction} from "redux"
 import {useTheme as useNextTheme} from "next-themes"
+import {AppDispatch} from "@/app/redux/store"
+import {login} from "@/app/redux/features/usersSlice"
+import {Box, Button, TextField} from "@mui/material"
+import {useRouter} from "next/navigation"
 
 
 const emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -14,7 +14,7 @@ const emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export const style = {
     form: {
         '& .MuiTextField-root': {
-            m: 1
+            m: 1,
         },
         width: '100%',
         maxWidth: '30rem',
@@ -36,25 +36,26 @@ export const style = {
 export default function UserForm({onCloseModal}: {
     onCloseModal: () => void
 }) {
-    const {
-        openModal, setOpenModal, modalProps, setModalProps
-    } = React.useContext(ModalContext)
+    // const {
+    //     openModal, setOpenModal, modalProps, setModalProps
+    // } = React.useContext(ModalContext)
     const {theme} = useNextTheme()
     const titleInput = React.useRef<HTMLInputElement | null>(null)
     const [nameInputError, setNameInputError] = React.useState(false)
     const [emailInputError, setEmailInputError] = React.useState(false)
     const [passwordInputError, setPasswordInputError] = React.useState(false)
-    const dispatch = useDispatch<ThunkDispatch<UserState, unknown, AnyAction>>()
+    const dispatch = useDispatch<AppDispatch>()
+    const router = useRouter()
 
-    const user: User | null = React.useMemo(() => {
-        if (modalProps.formProps && modalProps.formProps.id < 0) return {
-            id: -1,
-            name: '',
-            email: '',
-            password: ''
-        }
-        return null
-    }, [modalProps.formProps?.id])
+    // const user: User | null = React.useMemo(() => {
+    //     if (modalProps.formProps && modalProps.formProps.id < 0) return {
+    //         id: -1,
+    //         name: '',
+    //         email: '',
+    //         password: ''
+    //     }
+    //     return null
+    // }, [modalProps.formProps?.id])
 
     const [name, setName] = React.useState('')
     const [password, setPassword] = React.useState('')
@@ -87,7 +88,7 @@ export default function UserForm({onCloseModal}: {
         component="form"
         onSubmit={loginUser}
         mt={4}
-        sx={modalProps?.type === 'user_form' ? style.form : {"display": "none"}}
+        sx={style.form}
         noValidate
         autoComplete="off"
     >

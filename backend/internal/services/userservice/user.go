@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/user_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/token"
@@ -217,7 +216,6 @@ type GetUserResponse struct {
 }
 
 func (us *UserService) Get(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("in Get")
 	if !util.HasAccessRights(w, r, "moderator") {
 		return
 	}
@@ -249,7 +247,6 @@ func (us *UserService) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (us *UserService) GetCurrent(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("in GetCurrent")
 	userId := r.Context().Value("userId").(int64)
 
 	u, err := us.userRepository.GetUserById(r.Context(), userId)
@@ -260,6 +257,9 @@ func (us *UserService) GetCurrent(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
+	ticker200 := time.NewTicker(time.Second * 3)
+	defer ticker200.Stop()
+	<-ticker200.C
 	if err = json.NewEncoder(w).Encode(&GetUserResponse{
 		ID:                u.ID,
 		Name:              u.Name,

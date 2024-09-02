@@ -3,17 +3,10 @@
 import React from 'react'
 import {IconButton, List} from "@mui/material"
 import {useDispatch, useSelector} from "react-redux"
-import {
-    createOffice, fetchOffices, OfficesState
-} from "@/app/redux/features/officesSlice"
-import {RootState} from '@/app/redux/store'
-import {ThunkDispatch} from "@reduxjs/toolkit"
-import {
-    AddCircleOutlined
-} from "@mui/icons-material"
-import {AnyAction} from "redux"
+import {fetchOffices} from "@/app/redux/features/officesSlice"
+import {AddCircleOutlined} from "@mui/icons-material"
 import {ModalContext} from "@/components/ModalProvider"
-import {type Office} from "@/app/models"
+import {AppDispatch, RootState} from "@/app/redux/store"
 import dynamic from 'next/dynamic'
 
 const NoSSROfficeItem = dynamic(() => import("@/components/OfficeItem"), {ssr: false})
@@ -22,7 +15,7 @@ export default function Page() {
     const {
         setOpenModal, setModalProps
     } = React.useContext(ModalContext)
-    const dispatch = useDispatch<ThunkDispatch<OfficesState, unknown, AnyAction>>()
+    const dispatch = useDispatch<AppDispatch>()
     const {
         offices
     } = useSelector((state: RootState) => state.offices)

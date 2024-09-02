@@ -10,7 +10,6 @@ export default function ThemeSwitcher() {
     const [mounted, setMounted] = React.useState(false)
 
     React.useEffect(() => {
-        console.log("Theme: ", theme)
         setMounted(true)
         setChecked(theme === 'dark')
     }, [])

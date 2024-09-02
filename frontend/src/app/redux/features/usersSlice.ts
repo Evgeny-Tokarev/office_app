@@ -1,26 +1,17 @@
 "use client"
 
-import {createAsyncThunk, createSlice, type SerializedError, ThunkDispatch} from "@reduxjs/toolkit"
+import {createAsyncThunk, createSlice, type SerializedError} from "@reduxjs/toolkit"
 import {type User} from '@/app/models'
-import {setError, type ErrorSatate, clearError} from "@/app/redux/features/errorSlice"
+import {clearError, setError, setLoading} from "@/app/redux/features/utilsSlice"
 import api from "@/app/api"
-import type { AppDispatch, RootState } from "@/app/redux/store"
+import type {AppDispatch, RootState} from "@/app/redux/store"
 
 export type UserState = {
-    currentUser: User | null,
-    loading: boolean,
-    infoState: null | {
-        title: string,
-        text: string
-    },
-    error: null | {
-        code: string,
-        message: string
-    },
+    currentUser: User | null | undefined,
 };
 
 const initialState = {
-    currentUser: null, loading: false, error: null, infoState: null
+    currentUser: undefined
 } as UserState
 
 
@@ -28,15 +19,27 @@ export const login = createAsyncThunk<{ user: User, token: string }, {
     userName: string,
     email: string,
     password: string
-}, {
-    rejectValue: SerializedError; dispatch: AppDispatch
-}>('users/login', async ({userName, email, password}, {dispatch, rejectWithValue}) => {
+}, { rejectValue: SerializedError; state: RootState; dispatch: AppDispatch }>('users/login', async ({
+                                                                                                        userName,
+                                                                                                        email,
+                                                                                                        password
+                                                                                                    }, {
+                                                                                                        dispatch,
+                                                                                                        rejectWithValue
+                                                                                                    }) => {
     try {
+        dispatch(setLoading(true))
         const response = await api.usersApi.login(userName, email, password)
+        dispatch(setLoading(false))
+        console.log(response)
         if (response.data?.status === 200) {
             dispatch(clearError())
             return response.data.data
         }
+        dispatch(setError({
+            code: response.error?.code,
+            message: response.error?.message
+        }))
         return rejectWithValue({
             code: response.error?.code,
             message: response.error?.message
@@ -48,11 +51,18 @@ export const login = createAsyncThunk<{ user: User, token: string }, {
 
 export const getCurrentUser = createAsyncThunk<User, string, {
     rejectValue: SerializedError;
-}>('users/getCurrentUser', async (token, {rejectWithValue}) => {
+    state: RootState;
+    dispatch: AppDispatch
+}>('users/getCurrentUser', async (token, {dispatch, rejectWithValue}) => {
     try {
+        dispatch(setLoading(true))
         const response = await api.usersApi.getCurrentUser(token)
-        console.log(response.data)
+        dispatch(setLoading(false))
         if (response.data?.status === 200) return response.data.data
+        dispatch(setError({
+            code: response.error?.code,
+            message: response.error?.message
+        }))
         return rejectWithValue({
             code: response.error?.code,
             message: response.error?.message
@@ -68,30 +78,23 @@ export const users = createSlice({
             state.currentUser = null
             localStorage.removeItem('officeAppToken')
         },
+
+        setNullCurrentUser: (state) => {
+            state.currentUser = null
+        },
     }, extraReducers: builder => {
         builder
-            .addCase(login.pending, state => {
-                state.loading = true
-            })
             .addCase(login.fulfilled, (state, action) => {
-                state.loading = false
                 state.currentUser = action.payload.user
                 localStorage.setItem('officeAppToken', action.payload.token)
             })
             .addCase(login.rejected, (state, action) => {
-                console.log("login rejected")
-                state.loading = false
                 state.currentUser = null
             })
-            .addCase(getCurrentUser.pending, state => {
-                state.loading = true
-            })
             .addCase(getCurrentUser.fulfilled, (state, action) => {
-                state.loading = false
                 state.currentUser = action.payload
             })
             .addCase(getCurrentUser.rejected, (state, action) => {
-                state.loading = false
                 state.currentUser = null
             })
 
@@ -99,4 +102,4 @@ export const users = createSlice({
 })
 
 export default users.reducer
-export const {logOut} = users.actions
+export const {logOut, setNullCurrentUser} = users.actions

@@ -1,33 +1,22 @@
 "use client"
 
 import * as React from 'react'
-import {
-    Typography,
-    Avatar,
-    ListItemAvatar,
-    ListItemText,
-    ListItem
-} from '@mui/material/'
+import {Avatar, ListItem, ListItemAvatar, ListItemText, Typography} from '@mui/material/'
 import {Office} from "@/app/models"
 import {IconButton} from "@mui/material"
 import {DeleteForever, Edit} from "@mui/icons-material"
 import convertDate from "@/app/helpers/dateConverter"
-import {
-    ModalContext
-} from "@/components/ModalProvider"
+import {ModalContext} from "@/components/ModalProvider"
 import {useDispatch} from "react-redux"
-import {ThunkDispatch} from "@reduxjs/toolkit"
-import {
-    deleteOffice, fetchOffices, OfficesState, updateOffice
-} from "@/app/redux/features/officesSlice"
-import {type AnyAction} from "redux"
+import {deleteOffice, fetchOffices, updateOffice} from "@/app/redux/features/officesSlice"
 import {useRouter} from "next/navigation"
+import {AppDispatch} from "@/app/redux/store"
 
 
 export default function OfficeItem({office}: {
     office: Office
 }) {
-    const dispatch = useDispatch<ThunkDispatch<OfficesState, unknown, AnyAction>>()
+    const dispatch = useDispatch<AppDispatch>()
     const router = useRouter()
     const {
         setOpenModal, setModalProps
@@ -70,6 +59,7 @@ export default function OfficeItem({office}: {
             title: `Edit office ${office.name}`,
             isPermanent: true,
             actionCallback: cb,
+            closable: true,
             formProps: {
                 id: office.id
             }

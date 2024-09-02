@@ -1,22 +1,17 @@
 "use client"
 
 import * as React from 'react'
-import {useContext, useEffect} from 'react'
 import {Box, IconButton, Modal, Typography} from '@mui/material'
 import {createPortal} from 'react-dom'
 import {Close} from "@mui/icons-material"
 import {initialProps, initialStyleProps, ModalContext} from "@/components/ModalProvider"
 import {useDispatch, useSelector} from "react-redux"
-import {RootState} from "@/app/redux/store"
-import {LoaderContext} from "@/components/LoaderProvider"
+import {AppDispatch, RootState} from "@/app/redux/store"
 import ConfirmActions from "@/components/modal/ConfirmActions"
 import OfficeForm from "@/components/modal/OfficeForm"
 import UserForm from "@/components/modal/UserForm"
 import EmployeeForm from "@/components/modal/EmployeeForm"
 import {type ModalProps, type StyleObj} from "@/app/models"
-import {getCurrentUser, UserState} from "@/app/redux/features/usersSlice"
-import {ThunkDispatch} from "@reduxjs/toolkit"
-import {AnyAction} from "redux"
 
 
 const style: StyleObj = {
@@ -47,18 +42,16 @@ export default function BasicModal() {
         openModal, setOpenModal, modalProps, setModalProps
     } = React.useContext(ModalContext)
     const {
-        error, loading, infoState
-    } = useSelector((state: RootState) => state.offices)
-    const {setShowLoader} = useContext(LoaderContext)
+        error, infoState
+    } = useSelector((state: RootState) => state.utils)
     const [initialModalProps, setInitialModalProps] = React.useState<ModalProps>({...initialProps})
     const [initialModalOpenState, setInitialModalOpenState] = React.useState(false)
-    const {currentUser} = useSelector((state: RootState) => state.users)
-    const dispatch = useDispatch<ThunkDispatch<UserState, unknown, AnyAction>>()
+    const dispatch = useDispatch<AppDispatch>()
     const [mounted, setMounted] = React.useState(false)
 
 
     React.useEffect(() => {
-        if (infoState && !openModal) {
+        if (infoState) {
             setInitialModalOpenState(openModal)
             setInitialModalProps({...modalProps})
             setOpenModal(true)
@@ -78,7 +71,7 @@ export default function BasicModal() {
             setInitialModalOpenState(openModal)
             setInitialModalProps({...modalProps})
             setModalProps({
-                type: 'info', title: error.code, text: error.message, isPermanent: false,
+                type: 'info', title: error.code, text: error.message, isPermanent: false, closable: true,
                 style: {
                     ...initialStyleProps,
                     bgcolor: 'pink'
@@ -87,26 +80,6 @@ export default function BasicModal() {
             setOpenModal(true)
         }
     }, [error])
-
-    useEffect(() => {
-        if (!loading) setShowLoader(false)
-        else setShowLoader(true)
-    }, [loading])
-
-    useEffect(() => {
-        const token = localStorage.getItem('officeAppToken')
-        if (token) {
-            dispatch(getCurrentUser(token))
-        }
-    }, [])
-
-    useEffect(() => {
-        if (!currentUser) {
-            setOpenModal(true)
-            setModalProps(loginModalProps)
-        } else closeModal()
-
-    }, [currentUser])
 
 
     React.useEffect(() => {
