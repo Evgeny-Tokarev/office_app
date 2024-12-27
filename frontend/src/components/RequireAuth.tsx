@@ -26,17 +26,15 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({children}) => {
     }, [])
 
     useEffect(() => {
-        if (!authChecked) return // Wait until auth check is complete
+        if (!authChecked) return
 
         if (currentUser) {
-            // If currentUser exists and user is on /login, redirect to home or another path
             if (pathname === '/login') {
                 const redirectPath = sessionStorage.getItem("redirectAfterLogin") || '/'
                 sessionStorage.removeItem("redirectAfterLogin")
                 router.push(redirectPath)
             }
         } else {
-            // If no currentUser, redirect to /login
             const currentPath = window.location.pathname
             if (currentPath !== '/login') {
                 sessionStorage.setItem("redirectAfterLogin", currentPath)
@@ -45,7 +43,7 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({children}) => {
         }
     }, [currentUser, router, authChecked])
 
-    if (!authChecked) return <p>Not showing</p>
+    if (!authChecked) return
     return <>{children}</>
 }
 

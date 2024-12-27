@@ -72,6 +72,42 @@ export const getCurrentUser = createAsyncThunk<User, string, {
     }
 })
 
+export const register = createAsyncThunk<{ user: User, token: string }, {
+    userName: string,
+    email: string,
+    password: string,
+    role: string
+}, { rejectValue: SerializedError; state: RootState; dispatch: AppDispatch }>('users/register', async ({
+                                                                                                           userName,
+                                                                                                           email,
+                                                                                                           password,
+                                                                                                           role
+                                                                                                       }, {
+                                                                                                           dispatch,
+                                                                                                           rejectWithValue
+                                                                                                       }) => {
+    try {
+        dispatch(setLoading(true))
+        const response = await api.usersApi.register(userName, email, password, role)
+        dispatch(setLoading(false))
+        console.log(response)
+        if (response.data?.status === 200) {
+            dispatch(clearError())
+            return response.data.data
+        }
+        dispatch(setError({
+            code: response.error?.code,
+            message: response.error?.message
+        }))
+        return rejectWithValue({
+            code: response.error?.code,
+            message: response.error?.message
+        } as SerializedError)
+    } catch (err) {
+        return rejectWithValue(err as SerializedError)
+    }
+})
+
 export const users = createSlice({
     name: "users", initialState, reducers: {
         logOut: (state) => {
@@ -95,6 +131,13 @@ export const users = createSlice({
                 state.currentUser = action.payload
             })
             .addCase(getCurrentUser.rejected, (state, action) => {
+                state.currentUser = null
+            })
+            .addCase(register.fulfilled, (state, action) => {
+                state.currentUser = action.payload.user
+                localStorage.setItem('officeAppToken', action.payload.token)
+            })
+            .addCase(register.rejected, (state, action) => {
                 state.currentUser = null
             })
 

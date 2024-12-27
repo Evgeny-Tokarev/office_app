@@ -13,7 +13,6 @@ import (
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/employeeservice"
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/officeservice"
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/userservice"
-	"github.com/evgeny-tokarev/office_app/backend/internal/token"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -24,9 +23,8 @@ import (
 )
 
 type App struct {
-	config     config.Config
-	tokenMaker token.Maker
-	store      Store
+	config config.Config
+	store  Store
 }
 
 type Store struct {
@@ -44,19 +42,15 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func NewApp(config config.Config, tokenType string) (*App, error) {
-	tokenMaker, err := token.NewMaker(tokenType, config.JwtSecret)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create token maker: %w", err)
-	}
+
 	db, err := bootstrap.InitSqlDB(config)
 	if err != nil {
 		return nil, err
 	}
 	storage := NewStore(db)
 	app := &App{
-		config:     config,
-		tokenMaker: tokenMaker,
-		store:      *storage,
+		config: config,
+		store:  *storage,
 	}
 
 	return app, nil

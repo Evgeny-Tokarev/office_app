@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
+import {MouseEvent} from "react"
 import {useDispatch} from "react-redux"
 import {useTheme as useNextTheme} from "next-themes"
 import {AppDispatch} from "@/app/redux/store"
-import {login} from "@/app/redux/features/usersSlice"
-import {Box, Button, TextField} from "@mui/material"
+import {login, register} from "@/app/redux/features/usersSlice"
+import {Autocomplete, Box, Button, TextField} from "@mui/material"
 import {useRouter} from "next/navigation"
 
 
@@ -31,8 +32,18 @@ export const style = {
         left: 0,
         whiteSpace: 'nowrap',
         width: 1
+    },
+    buttonWrapper: {
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
     }
 }
+
+const roles = [
+    'user', 'admin'
+]
 export default function UserForm({onCloseModal}: {
     onCloseModal: () => void
 }) {
@@ -40,6 +51,8 @@ export default function UserForm({onCloseModal}: {
     //     openModal, setOpenModal, modalProps, setModalProps
     // } = React.useContext(ModalContext)
     const {theme} = useNextTheme()
+    const [roleValue, setRoleValue] = React.useState<string>(roles[0])
+    const [showRoles, setShowRoles] = React.useState<boolean>(false)
     const titleInput = React.useRef<HTMLInputElement | null>(null)
     const [nameInputError, setNameInputError] = React.useState(false)
     const [emailInputError, setEmailInputError] = React.useState(false)
@@ -61,15 +74,36 @@ export default function UserForm({onCloseModal}: {
     const [password, setPassword] = React.useState('')
     const [email, setEmail] = React.useState('')
 
-    const loginUser = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
+
+    const handleFocus = () => {
+        setNameInputError(false)
+        setEmailInputError(false)
+        setPasswordInputError(false)
+    }
+    const checkForErrors = () => {
         if (name.length < 3 || !emailReg.test(email) || password.length < 3) {
             setNameInputError(name.length < 3)
             setEmailInputError(!emailReg.test(email))
             setPasswordInputError(password.length < 3)
-            return
+            return true
         }
-        await dispatch(login({userName: name, email: email, password: password}))
+        return false
+    }
+
+    const onLoginUserClick = async (e: MouseEvent) => {
+        e.preventDefault()
+        if (!showRoles) {
+            if (checkForErrors()) return
+            await dispatch(login({userName: name, email: email, password: password}))
+        } else setShowRoles(false)
+    }
+
+    const onRegisterUserClick = async (e: MouseEvent) => {
+        e.preventDefault()
+        if (showRoles) {
+            if (checkForErrors()) return
+            await dispatch(register({userName: name, email: email, password: password, role: roleValue}))
+        } else setShowRoles(true)
     }
     const onNameInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setName(e.target.value)
@@ -84,9 +118,12 @@ export default function UserForm({onCloseModal}: {
         setPasswordInputError(false)
     }
 
+    const onRoleChange = (e: React.SyntheticEvent, value: string) => {
+        console.log(value)
+    }
+
     return (<Box
         component="form"
-        onSubmit={loginUser}
         mt={4}
         sx={style.form}
         noValidate
@@ -103,6 +140,7 @@ export default function UserForm({onCloseModal}: {
                 inputRef={titleInput}
                 helperText={nameInputError ? 'Name should have at least 3 characters' : ' '}
                 onChange={(e) => onNameInputChange(e)}
+                onFocus={handleFocus}
             />
             <TextField
                 error={emailInputError}
@@ -114,6 +152,7 @@ export default function UserForm({onCloseModal}: {
                 maxRows={4}
                 helperText={emailInputError ? 'Address should have at least 3 characters' : ' '}
                 onChange={(e) => onEmailInputChange(e)}
+                onFocus={handleFocus}
             />
             <TextField
                 error={passwordInputError}
@@ -125,12 +164,46 @@ export default function UserForm({onCloseModal}: {
                 maxRows={4}
                 helperText={emailInputError ? 'Password should have at least 3 characters' : ' '}
                 onChange={(e) => onPasswordInputChange(e)}
+                onFocus={handleFocus}
             />
+            {showRoles && <Autocomplete
+                disableClearable={true}
+                onChange={(event: any, newValue: string) => {
+                    setRoleValue(newValue)
+                }}
+                renderOption={(props, option) => {
+                    return (
+                        <li
+                            {...props}
+                            key={option}>
+                            {option}
+                        </li>
+                    )
+                }}
+                renderInput={(params) =>
+                    <TextField
+                        {...params}
+                        label="Role"/>}
+                options={roles}
+                value={roleValue}
+                id="role"
+                fullWidth
+            />}
 
         </div>
-        <Button
-            variant="contained"
-            sx={{mt: 4}}
-            type="submit">Login</Button>
+        <Box
+            component="div"
+            mt={4}
+            sx={style.buttonWrapper}
+        >
+            <Button
+                component="button"
+                variant={!showRoles ? "contained" : "outlined"}
+                onClick={onLoginUserClick}>Login</Button>
+            <Button
+                component="button"
+                variant={showRoles ? "contained" : "outlined"}
+                onClick={onRegisterUserClick}>Register</Button>
+        </Box>
     </Box>)
 }

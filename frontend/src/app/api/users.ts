@@ -43,5 +43,26 @@ export default {
         } catch (err: unknown) {
             return axiosErrorHandler(err)
         }
+    },
+    register: async function (userName: string, email: string, password: string, role: string): Promise<RestApiResponse<{
+        status: number,
+        data: { user: User, token: string }
+    }>> {
+        try {
+            const resp = await axios.post('/user/register', {
+                password: password,
+                email: email,
+                name: userName,
+                role: role
+            })
+            return {
+                data: {
+                    data: resp.data,
+                    status: resp.status
+                }, error: undefined
+            }
+        } catch (err: unknown) {
+            return axiosErrorHandler(err)
+        }
     }
 }

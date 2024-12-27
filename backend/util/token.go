@@ -17,7 +17,7 @@ func GenerateToken(userID int) (string, error) {
 		return "", err
 	}
 
-	secret := cfg.JwtSecret
+	secret := cfg.TokenSecret
 	claims := token.Claims.(jwt.MapClaims)
 	claims["userID"] = userID
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()

@@ -1,5 +1,5 @@
 local:
   dialect: postgres
-  datasource: dbname=office_app user=postgres password=password sslmode=disable port=5432
+  datasource: dbname=office_app user=db password=db sslmode=disable host=127.0.0.1 port=5458
   dir: migrations
   table: migrations

@@ -2,7 +2,7 @@ package token
 
 import "time"
 
-var makerMap = map[string]func(secret string) (Maker, error){
+var MakerMap = map[string]func(secret string) (Maker, error){
 	"jwt": func(secret string) (Maker, error) {
 		return NewJWTMaker(secret)
 	},
@@ -17,5 +17,5 @@ type Maker interface {
 }
 
 func NewMaker(makerType string, secret string) (Maker, error) {
-	return makerMap[makerType](secret)
+	return MakerMap[makerType](secret)
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/user_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/token"
@@ -26,7 +27,10 @@ type UserService struct {
 }
 
 func New(userRepository user_repository.Querier, cfg config.Config) (*UserService, error) {
-	tokenMaker, err := token.NewJWTMaker(cfg.JwtSecret)
+	tokenMaker, err := token.NewMaker(cfg.TokenType, cfg.TokenSecret)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +43,7 @@ func New(userRepository user_repository.Querier, cfg config.Config) (*UserServic
 func (us *UserService) SetHandlers(router, authRoutes *mux.Router) {
 	authRoutes.HandleFunc("/user/current", us.GetCurrent).Methods(http.MethodGet)
 	authRoutes.HandleFunc("/user/{id}", us.Get).Methods(http.MethodGet)
-	router.HandleFunc("/user", us.Create).Methods(http.MethodPost)
+	router.HandleFunc("/user/register", us.Create).Methods(http.MethodPost)
 	router.HandleFunc("/user/login", us.Login).Methods(http.MethodPost)
 	router.HandleFunc("/user", us.List).Methods(http.MethodGet)
 	router.HandleFunc("/user", us.Update).Methods(http.MethodPut)
@@ -48,10 +52,10 @@ func (us *UserService) SetHandlers(router, authRoutes *mux.Router) {
 }
 
 type CreateRequest struct {
-	Name     string `db:"name"`
-	Email    string `db:"email"`
-	Role     string `db:"role"`
-	Password string `db:"password"`
+	Name     string `db:"name" json:"name"`
+	Email    string `db:"email" json:"email"`
+	Role     string `db:"role" json:"role"`
+	Password string `db:"password" json:"password"`
 }
 
 type CreateResponse struct {
@@ -65,6 +69,7 @@ func (us *UserService) Create(w http.ResponseWriter, r *http.Request) {
 		util.SendTranscribedError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	fmt.Println("In create", req)
 
 	if req.Name == "" || req.Email == "" || req.Role == "" || req.Password == "" {
 		util.SendTranscribedError(w, "all fields are required", http.StatusBadRequest)
@@ -182,9 +187,11 @@ func (us *UserService) Login(w http.ResponseWriter, r *http.Request) {
 
 	t, err := us.TokenMaker.CreateToken(user1.ID, user1.Role, time.Hour*24)
 	if err != nil {
+		fmt.Println(err.Error())
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
 	}
+	fmt.Println("token: ", t)
 	w.WriteHeader(http.StatusOK)
 	user := UserForLoginResponse{
 		ID:                user1.ID,

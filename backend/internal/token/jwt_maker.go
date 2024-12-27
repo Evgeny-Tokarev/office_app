@@ -20,6 +20,8 @@ func NewJWTMaker(secretKey string) (Maker, error) {
 }
 
 func (maker *JWTMaker) CreateToken(id int64, role string, duration time.Duration) (string, error) {
+	fmt.Println("creating jwt token")
+
 	payload, err := NewPayload(id, role, duration)
 	if err != nil {
 		return "", nil
@@ -38,7 +40,8 @@ func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 		return []byte(maker.secretKey), nil
 	})
 	if err != nil {
-		verr, ok := err.(*jwt.ValidationError)
+		var verr *jwt.ValidationError
+		ok := errors.As(err, &verr)
 		if ok && errors.Is(verr.Inner, util.ErrorTokenExpired) {
 			return nil, util.ErrorTokenExpired
 		}

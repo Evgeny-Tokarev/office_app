@@ -17,6 +17,9 @@ func NewPasetoMaker(symmetricKey string) (Maker, error) {
 	if len(symmetricKey) < chacha20poly1305.KeySize {
 		return nil, fmt.Errorf("invalid key size: should be at least %d characters", chacha20poly1305.KeySize)
 	}
+	if len(symmetricKey) > chacha20poly1305.KeySize {
+		symmetricKey = symmetricKey[:32]
+	}
 	return &PasetoMaker{
 		paseto:       paseto.NewV2(),
 		symmetricKey: []byte(symmetricKey)}, nil
