@@ -8,11 +8,9 @@
 :root {
 }
 
-
-[data-theme='dark'] {
-}
 @media (prefers-color-scheme: dark) {
   :root {
+      background: brown;
   }
 }
 

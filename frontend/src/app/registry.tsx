@@ -1,10 +1,10 @@
 'use client'
 
-import React, {useEffect} from 'react'
+import React, {useEffect, useState} from 'react'
 import {useServerInsertedHTML} from 'next/navigation'
 import createCache, {type Options} from '@emotion/cache'
 import {CacheProvider} from '@emotion/react'
-import {THEME_ID, ThemeProvider as MuiThemeProvider} from '@mui/material/styles'
+import {Theme, THEME_ID, ThemeProvider as MuiThemeProvider} from '@mui/material/styles'
 import {darkTheme, lightTheme} from "@/app/themes/themes"
 import {ThemeProvider as NextThemeProvider, useTheme as useNextTheme} from "next-themes"
 import {CssBaseline} from "@mui/material"
@@ -67,39 +67,54 @@ function MTP({
     children: React.ReactNode
 }) {
     // this part uses autodetection for the system(browser?) theme
-    // const {theme} = useNextTheme()
+    const {theme} = useNextTheme()
+    const [mounted, setMounted] = React.useState(false)
+    const [mTheme, setMTheme] = React.useState(theme === '' ? lightTheme : darkTheme)
+    const [prefersDarkMode, setPrefersDarkMode] = useState(false)
+    const themeMap = {
+        'light': lightTheme,
+        'dark': darkTheme,
+        'system': prefersDarkMode ? darkTheme : lightTheme
+    } as { [key: string]: Theme }
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        setPrefersDarkMode(mediaQuery.matches)
+
+        const handleChange = (e: MediaQueryListEvent) => setPrefersDarkMode(e.matches);
+        mediaQuery.addEventListener('change', handleChange);
+        setMTheme(themeMap[theme ?? 'system'] )
+        setMounted(true)
+
+        return () => mediaQuery.removeEventListener('change', handleChange);
+    }, [])
+
+    useEffect(() => {
+        console.log(theme)
+        setMTheme(themeMap[theme ?? 'system'] )
+    }, [theme])
+    if (!mounted) return null
+    return (<MuiThemeProvider
+        theme={{ [THEME_ID]: mTheme }}>
+        <CssBaseline/>
+        {children}
+    </MuiThemeProvider>)
+
+    // const {resolvedTheme} = useNextTheme()
     // const [mounted, setMounted] = React.useState(false)
-    // const [mTheme, setMTheme] = React.useState(theme === 'light' || theme === '' ? lightTheme : darkTheme)
+    //
     // useEffect(() => {
-    //     setMTheme(theme === 'light' || theme === '' ? lightTheme : darkTheme)
     //     setMounted(true)
     // }, [])
     //
-    // useEffect(() => {
-    //     setMTheme(theme === 'light' || theme === '' ? lightTheme : darkTheme)
-    // }, [theme])
+    // const selectedTheme = resolvedTheme === 'dark' ? darkTheme : lightTheme
+    //
     // if (!mounted) return null
-    // return (<MuiThemeProvider
-    //     theme={{ [THEME_ID]: mTheme }}>
-    //     <CssBaseline/>
-    //     {children}
-    // </MuiThemeProvider>)
-
-    const {resolvedTheme} = useNextTheme()
-    const [mounted, setMounted] = React.useState(false)
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
-
-    const selectedTheme = resolvedTheme === 'dark' ? darkTheme : lightTheme
-
-    if (!mounted) return null
-
-    return (
-        <MuiThemeProvider theme={{[THEME_ID]: selectedTheme}}>
-            <CssBaseline/>
-            {children}
-        </MuiThemeProvider>
-    )
+    //
+    // return (
+    //     <MuiThemeProvider theme={{[THEME_ID]: selectedTheme}}>
+    //         <CssBaseline/>
+    //         {children}
+    //     </MuiThemeProvider>
+    // )
 }

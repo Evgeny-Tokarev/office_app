@@ -59,10 +59,10 @@ export const getCurrentUser = createAsyncThunk<User, string, {
         const response = await api.usersApi.getCurrentUser(token)
         dispatch(setLoading(false))
         if (response.data?.status === 200) return response.data.data
-        dispatch(setError({
-            code: response.error?.code,
-            message: response.error?.message
-        }))
+        // dispatch(setError({
+        //     code: response.error?.code,
+        //     message: response.error?.message
+        // }))
         return rejectWithValue({
             code: response.error?.code,
             message: response.error?.message
@@ -90,7 +90,6 @@ export const register = createAsyncThunk<{ user: User, token: string }, {
         dispatch(setLoading(true))
         const response = await api.usersApi.register(userName, email, password, role)
         dispatch(setLoading(false))
-        console.log(response)
         if (response.data?.status === 200) {
             dispatch(clearError())
             return response.data.data

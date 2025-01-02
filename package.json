@@ -1,5 +1,10 @@
 {
   "dependencies": {
+    "@googlemaps/markerclustererplus": "^1.2.10",
     "next-redux-wrapper": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.15",
+    "@types/google.maps": "^3.58.1"
   }
 }

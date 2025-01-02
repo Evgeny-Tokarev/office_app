@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/office_repository"
+	"github.com/evgeny-tokarev/office_app/backend/internal/services/geoservice"
 	"github.com/evgeny-tokarev/office_app/backend/util"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -16,11 +18,13 @@ import (
 
 type OfficeService struct {
 	officeRepository office_repository.Querier
+	geoService       *geoservice.GeoService
 }
 
-func New(officeRepository office_repository.Querier) *OfficeService {
+func New(officeRepository office_repository.Querier, geoservice *geoservice.GeoService) *OfficeService {
 	return &OfficeService{
 		officeRepository: officeRepository,
+		geoService:       geoservice,
 	}
 }
 
@@ -82,6 +86,7 @@ type CreateResponse struct {
 }
 
 func (ofs *OfficeService) Create(w http.ResponseWriter, r *http.Request) {
+	var isAddressValid = true
 
 	req := &CreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
@@ -89,15 +94,24 @@ func (ofs *OfficeService) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o := office_repository.CreateOfficeParams{
-		Name:    req.Name,
-		Address: req.Address,
-	}
-
 	if req.Name == "" || req.Address == "" {
 		util.SendTranscribedError(w, "all fields are required", http.StatusBadRequest)
 		return
 	}
+
+	location, err := ofs.geoService.GetCoordinates(req.Address)
+	if err != nil {
+		fmt.Println("error: ", err.Error())
+		isAddressValid = false
+	}
+
+	o := office_repository.CreateOfficeParams{
+		Name:           req.Name,
+		Address:        req.Address,
+		Location:       &location,
+		IsAddressValid: isAddressValid,
+	}
+
 	office, err := ofs.officeRepository.CreateOffice(r.Context(), o)
 	if err != nil {
 		util.SendTranscribedError(w, err.Error(), http.StatusInternalServerError)

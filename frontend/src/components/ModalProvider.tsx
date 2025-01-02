@@ -1,10 +1,11 @@
 "use client"
 import React, {createContext, useState} from "react"
 import {ModalContextType, ModalProps} from "@/app/models"
+import type {Theme} from "@mui/material";
 
 export const initialStyleProps = {
+    bgcolor: (theme: Theme)  => theme.palette.background.paper,
     position: 'absolute',
-    color: 'black',
     top: '50%',
     left: '50%',
     bottom: 'auto',
@@ -22,7 +23,7 @@ export const initialStyleProps = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-} as { [name: string]: string | number }
+} as { [name: string]: string | number | Function}
 
 export const initialProps = {
     type: 'info',

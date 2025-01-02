@@ -6,14 +6,17 @@ package office_repository
 
 import (
 	"database/sql"
+	"encoding/json"
 	"time"
 )
 
 type Office struct {
-	ID        int64          `db:"id"`
-	Name      string         `db:"name"`
-	Address   string         `db:"address"`
-	CreatedAt time.Time      `db:"created_at"`
-	UpdatedAt time.Time      `db:"updated_at"`
-	ImgFile   sql.NullString `db:"img_file"`
+	ID             int64            `db:"id"`
+	Name           string           `db:"name"`
+	Address        string           `db:"address"`
+	CreatedAt      time.Time        `db:"created_at"`
+	UpdatedAt      time.Time        `db:"updated_at"`
+	ImgFile        sql.NullString   `db:"img_file"`
+	Location       *json.RawMessage `db:"location"`
+	IsAddressValid bool             `db:"is_address_valid"`
 }

@@ -10,4 +10,5 @@ type Config struct {
 	LogLvl      string `env:"LOG_LEVEL" envDefault:"DebugLevel"`
 	TokenSecret string `env:"TOKEN_SECRET" envDefault:"secret"`
 	TokenType   string `env:"TOKEN_TYPE" envDefault:"jwt"`
+	GeoApiToken string `env:"GOOGLE_MAPS_API_TOKEN"`
 }

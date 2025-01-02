@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from 'react'
-import {Box, IconButton, Modal, Typography} from '@mui/material'
+import {Box, IconButton, Modal, Typography, type Theme} from '@mui/material'
 import {createPortal} from 'react-dom'
 import {Close} from "@mui/icons-material"
 import {initialProps, initialStyleProps, ModalContext} from "@/components/ModalProvider"
@@ -32,7 +32,6 @@ const loginModalProps: ModalProps = {
         width: '100%',
         height: '100%',
         transform: 'none',
-        bgcolor: 'white'
     }
 }
 
@@ -110,17 +109,15 @@ export default function BasicModal() {
         setInitialModalProps({...initialProps})
     }
     return mounted ? createPortal(<Modal
-            sx={{"position": "absolute"}}
             open={openModal ?? false}
             onClose={(_, reason) => checkReasonAndClose(reason)}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
-        <Box sx={(theme) => ({
-                bgcolor: theme.palette.mode === 'light' ? 'white' : 'black',
+            <Box sx={(theme) => ({
                 ...style.modal
             })}>
-            <IconButton
+                <IconButton
                     size="large"
                     edge="start"
                     color="inherit"
@@ -128,31 +125,31 @@ export default function BasicModal() {
                     sx={{ml: 'auto', display: modalProps.closable ? '' : 'none'}}
                     onClick={closeModal}
                 >
-                <div
+                    <div
                         className="flex justify-between items-center">
-                    <Close/>
-                </div>
-            </IconButton>
-            <Typography
+                        <Close/>
+                    </div>
+                </IconButton>
+                <Typography
                     id="modal-modal-title"
                     variant="h6"
                     component="h3">
-                {modalProps.title}
-            </Typography>
-            <Typography
+                    {modalProps.title}
+                </Typography>
+                <Typography
                     id="modal-modal-description"
                     sx={{mt: 2}}>
-                {modalProps.text}
-            </Typography>
-            {modalProps.type === 'office_form' &&
-            <OfficeForm onCloseModal={closeModal}/>}
-            {modalProps.type === 'employee_form' &&
-            <EmployeeForm onCloseModal={closeModal}/>}
-            {modalProps.withActions &&
-            <ConfirmActions onAction={onAction}/>}
-            {modalProps.type === 'user_form' &&
-            <UserForm onCloseModal={closeModal}/>}
-        </Box>
-    </Modal>
+                    {modalProps.text}
+                </Typography>
+                {modalProps.type === 'office_form' &&
+                    <OfficeForm onCloseModal={closeModal}/>}
+                {modalProps.type === 'employee_form' &&
+                    <EmployeeForm onCloseModal={closeModal}/>}
+                {modalProps.withActions &&
+                    <ConfirmActions onAction={onAction}/>}
+                {modalProps.type === 'user_form' &&
+                    <UserForm onCloseModal={closeModal}/>}
+            </Box>
+        </Modal>
         , document.body) : null
 }

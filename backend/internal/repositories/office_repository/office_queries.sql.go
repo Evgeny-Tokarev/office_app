@@ -8,6 +8,8 @@ package office_repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"time"
 )
 
@@ -26,29 +28,63 @@ func (q *Queries) AttachePhoto(ctx context.Context, arg AttachePhotoParams) erro
 	return err
 }
 
+const getExistingOffice = `-- name: GetOffice :one
+select * from offices
+where name = $1 and address = $2
+`
+
 const createOffice = `-- name: CreateOffice :one
-insert into offices (name, address, created_at, updated_at)
-values ($1, $2, now(), now())
-RETURNING id, name, address, created_at, updated_at, img_file
+insert into offices (name, address, created_at, updated_at, img_file, location, is_valid_address)
+values ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, name, address, created_at, updated_at, img_file, location, is_valid_address
 `
 
 type CreateOfficeParams struct {
-	Name    string `db:"name"`
-	Address string `db:"address"`
+	ID             int64            `db:"id"`
+	Name           string           `db:"name"`
+	Address        string           `db:"address"`
+	CreatedAt      time.Time        `db:"created_at"`
+	UpdatedAt      time.Time        `db:"updated_at"`
+	ImgFile        sql.NullString   `db:"img_file"`
+	Location       *json.RawMessage `db:"location"`
+	IsAddressValid bool             `db:"is_address_valid"`
 }
 
 func (q *Queries) CreateOffice(ctx context.Context, arg CreateOfficeParams) (Office, error) {
-	row := q.db.QueryRowContext(ctx, createOffice, arg.Name, arg.Address)
-	var i Office
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Address,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.ImgFile,
+	var existingOffice Office
+	err := q.db.QueryRowContext(ctx, getExistingOffice, arg.Name, arg.Address).Scan(
+		&existingOffice.ID,
+		&existingOffice.Name,
+		&existingOffice.Address,
+		&existingOffice.CreatedAt,
+		&existingOffice.UpdatedAt,
+		&existingOffice.ImgFile,
+		&existingOffice.Location,
+		&existingOffice.IsAddressValid,
 	)
-	return i, err
+
+	if err == nil {
+		return existingOffice, errors.New("office already exists")
+	}
+
+	if !errors.Is(err, sql.ErrNoRows) {
+		return Office{}, err
+	}
+
+	var newOffice Office
+	row := q.db.QueryRowContext(ctx, createOffice, arg.Name, arg.Address, arg.CreatedAt, arg.UpdatedAt, arg.ImgFile, arg.Location, arg.IsAddressValid)
+	err = row.Scan(
+		&newOffice.ID,
+		&newOffice.Name,
+		&newOffice.Address,
+		&newOffice.CreatedAt,
+		&newOffice.UpdatedAt,
+		&newOffice.ImgFile,
+		&newOffice.Location,
+		&newOffice.IsAddressValid,
+	)
+
+	return newOffice, err
 }
 
 const deleteOffice = `-- name: DeleteOffice :exec

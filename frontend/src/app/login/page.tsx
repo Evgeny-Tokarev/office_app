@@ -17,7 +17,6 @@ const style = {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'white',
         zIndex: 1000
     },
     wrapper: {

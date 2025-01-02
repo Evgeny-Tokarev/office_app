@@ -11,6 +11,7 @@ import {ModalContextProvider} from "@/components/ModalProvider"
 import Modal from "@/components/modal/Modal"
 import {LoaderContextProvider} from "@/components/LoginProvider"
 import RequireAuth from "@/components/RequireAuth"
+import MapProvider from "@/components/GoogleMapProvider"
 
 const lato = Lato({
     weight: ['400', '700'],
@@ -42,6 +43,7 @@ export default function RootLayout({
                             <Modal/>
                             <Loader/>
                             <RequireAuth>
+                                <MapProvider>
                                 <Navbar/>
                                 <div className="flex flex-col justify-between items-stretch flex-1">
 
@@ -54,6 +56,7 @@ export default function RootLayout({
                                         {children}
                                     </Paper>
                                 </div>
+                                </MapProvider>
                             </RequireAuth>
                         </LoaderContextProvider>
                     </ModalContextProvider>

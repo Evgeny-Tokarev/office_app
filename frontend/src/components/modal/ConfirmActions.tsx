@@ -1,4 +1,4 @@
-import {Box, Button} from "@mui/material";
+import {Box, Button, type Theme} from '@mui/material';
 import * as React from "react";
 
 const style = {

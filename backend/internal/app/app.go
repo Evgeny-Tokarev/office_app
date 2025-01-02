@@ -5,12 +5,14 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/evgeny-tokarev/office_app/backend/internal/bootstrap"
+	"github.com/evgeny-tokarev/office_app/backend/internal/client"
 	"github.com/evgeny-tokarev/office_app/backend/internal/config"
 	"github.com/evgeny-tokarev/office_app/backend/internal/middlware"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/employee_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/office_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/repositories/user_repository"
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/employeeservice"
+	"github.com/evgeny-tokarev/office_app/backend/internal/services/geoservice"
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/officeservice"
 	"github.com/evgeny-tokarev/office_app/backend/internal/services/userservice"
 	"github.com/gorilla/handlers"
@@ -59,9 +61,11 @@ func NewApp(config config.Config, tokenType string) (*App, error) {
 func (a *App) Run(cfg config.Config) error {
 	log.Infof("Starting server on address %s and port %d", cfg.PgHost, cfg.Port)
 	router := mux.NewRouter()
+	geoClient := client.NewGeocodingClient(cfg.GeoApiToken)
+	geoService := geoservice.NewGeoService(geoClient)
 	authRoutes := router.PathPrefix("/").Subrouter()
 	emplService := employeeservice.New(a.store.EmployeeRepo)
-	officeService := officeservice.New(a.store.OfficeRepo)
+	officeService := officeservice.New(a.store.OfficeRepo, geoService)
 	userService, err := userservice.New(a.store.UserRepo, cfg)
 	if err != nil {
 		return err

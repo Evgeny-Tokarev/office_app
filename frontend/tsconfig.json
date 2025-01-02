@@ -34,9 +34,11 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "@types/google.maps"
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+  "types": ["google.maps"]
 }
